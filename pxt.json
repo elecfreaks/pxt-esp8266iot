@@ -1,0 +1,26 @@
+{
+    "name": "ESP8266_IoT",
+    "version": "1.0.0",
+    "description": "ESP8266 IoT package by ELECFREAKS and CLASSROOM",
+    "license": "MIT",
+    "dependencies": {
+        "core": "*"
+    },
+    "files": [
+        "README.md",
+        "ssd1306.ts",
+        "SSD1306_OLED.cpp",
+        "Adafruit_SSD1306.h",
+        "Adafruit_SSD1306.cpp",
+        "Adafruit_GFX.h",
+        "Adafruit_GFX.cpp",
+        "Adafruit_GFX_Config.h",
+        "glcdfont.h",
+        "enums.d.ts",
+        "ESP8266.ts"
+    ],
+    "testFiles": [
+        "tests.ts"
+    ],
+    "public": true
+}
