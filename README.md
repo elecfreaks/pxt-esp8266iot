@@ -24,18 +24,21 @@ Set pin RX and pin TX for ESP8266 Serial Wifi Module，Baud rate: 9600.
 ```blocks
 ESP8266_IoT.initwifi(SerialPin.P2, SerialPin.P8)
 ```
+...
 
 ### connet wifi
 Connectwifi，please fill in your ssid and your key.
 ```blocks
 ESP8266_IoT.connectwifi("your ssid", "your key")
 ```
+...
 
 ### connectthingspeak
 Connect thingspeak IoT TCP server.
 ```blocks
 ESP8266_IoT.connectthingspeak()
 ```
+...
 
 ### set data to be send 
 Set data to be sent. Firstly, you should fill in your write api key.
@@ -52,12 +55,14 @@ ESP8266_IoT.tosendtext(
 0
 )
 ``` 
+...
 
 ### senddata
 Send data to thingspeak.
 ```blocks
 ESP8266_IoT.senddata()
 ```
+...
 
 ## License
 
