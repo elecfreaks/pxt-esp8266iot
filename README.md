@@ -24,7 +24,7 @@ Before start, you have to register an account of [thinkspeak](https://thingspeak
 
 ## Example
 
-### setwifi
+### set wifi
 Set pin RX and pin TX for ESP8266 Serial Wifi Module，Baud rate: 9600.
 ```blocks
 ESP8266_IoT.initwifi(SerialPin.P2, SerialPin.P8)
