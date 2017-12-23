@@ -1,67 +1,75 @@
-# ESP8266 IoT Package
+# ESP8266_IoT package
 
-## init wifi
-...
-## connect wifi
-...
-## connect thingspeak
-...
-## send data to thingspeak
-...
+ESP8266_IoT package由ELECFREAKS、TINKERCADEMY与CLSAAROOM共同开发。
+这个package用过将数据通过ESP8266模块上传至THINGSPEAK IOT平台。关于ESP8266模块的详情请见：http://www.elecfreaks.com/estore/esp8266-serial-wifi-module.html
 
-
-
-## SSD1306 OLED PXT Package [![Build Status](https://travis-ci.org/Tinkertanker/pxt-ssd1306-microbit.svg?branch=master)](https://travis-ci.org/Tinkertanker/pxt-ssd1306-microbit)
-
-This is the PXT Package for SSD1306 OLED controller, based on the Adafruit Arduino library available [here](https://github.com/adafruit/Adafruit_SSD1306).
+Before start, you have to register an account of [thinkspeak](https://thingspeak.com/).
 
 ## Hardware Setup
+
 1. Insert the OLED display into the I2C ports on the break out board.
 
-## PXT Blocks
-### Initialize OLED Display
-Initializes the OLED display.
+## Basic usage
 
-Clears the screen and sets the cursor to (0, 0) to print text.
+1. Open [Microsoft PXT/microbit](https://pxt.microbit.org) and new a project
+2. Search and add the `ESP8266` package
+3. Use the `ESP8266` drawer in the editor to drag out and arrange the blocks
+4. Click `Download` to move your program to the micro:bit
 
-Able to use 'show string' and 'show number' below.
+## Example
 
-In text output mode, wrapping is enabled.
-
-If text exceeds number of lines supported, the lines will 'shift up', like in a terminal.
-
-
-### Show String
-Prints a string to OLED, at cursor location.
-
-Requires OLED to be initialized for text display.
-
-
-### Show Number
-Prints a number to OLED, at cursor location.
-
-Requires OLED to be initialized for text display.
-
-
-## Example: Counter
-The following code is a simple counter that displays an increasing number every second.
-
-```typescript
-OLED.init(64, 128)
-let item = 0
-basic.forever(() => {
-    basic.pause(1000)
-    item += 1
-    OLED.showNumber(item)
-})
+### setwifi
+Set pin RX and pin TX for ESP8266 Serial Wifi Module，Baud rate: 9600.
+```blocks
+ESP8266_IoT.initwifi(SerialPin.P2, SerialPin.P8)
 ```
+
+### connet wifi
+Connectwifi，please fill in your ssid and your key.
+```blocks
+ESP8266_IoT.connectwifi("your ssid", "your key")
+```
+
+### connectthingspeak
+Connect thingspeak IoT TCP server.
+```blocks
+ESP8266_IoT.connectthingspeak()
+```
+
+### set data to be send 
+Set data to be sent. Firstly, you should fill in your write api key.
+```blocks
+ESP8266_IoT.tosendtext(
+"your write api key",
+0,
+0,
+0,
+0,
+0,
+0,
+0,
+0
+)
+``` 
+
+### senddata
+Send data to thingspeak.
+```blocks
+ESP8266_IoT.senddata()
+```
+
+## License
+
+MIT
 
 ## Supported targets
 
 * for PXT/microbit
+(The metadata above is needed for package search.)
 
-## Footnotes
+```package
+esp8266=github:elecfreaks/pxt-esp8266iot
+```
 
-1.  Datasheet
 
-https://cdn-shop.adafruit.com/datasheets/SSD1306.pdf
+
