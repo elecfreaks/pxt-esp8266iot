@@ -6,6 +6,8 @@ This package uploads data to THINGSPEAK IOT through [ESP8266 serial wifi module]
 
 Before start, you have to register an account of [thinkspeak](https://thingspeak.com/).
 
+![](https://github.com/elecfreaks/pxt-esp8266iot/blob/master/ESP8266.png)
+
 
 ## Hardware Setup
 
