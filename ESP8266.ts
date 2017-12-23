@@ -15,7 +15,7 @@ namespace ESP8266_IoT {
     let tobesendstring = ""
 
     /**
-     * TODO: describe your function here
+     * TODO: Set pin RX and TX for ESP8266 Serial Wifi Module，Baud rate: 9600.
      * @param wifiRX describe parameter here, eg: SerialPin.P2
      * @param wifiTX describe parameter here, eg: SerialPin.P8
      */
@@ -36,12 +36,12 @@ namespace ESP8266_IoT {
     }
 
     /**
-     * TODO: describe your function here
+     * TODO: connectwifi，Fill in your ssid and your key.
      * @param ssid describe parameter here, eg: "your ssid"
      * @param key describe parameter here, eg: "your key"
      */
     //% weight=99
-    //% blockId="wifi_connect" block="connectwifi SSDI: %ssid| KEY: %key"
+    //% blockId="wifi_connect" block="connect wifi SSDI: %ssid| KEY: %key"
     export function connectwifi(ssid: string, key: string): void {
         // Add code here
         let text = "AT+CWJAP=\""
@@ -54,7 +54,7 @@ namespace ESP8266_IoT {
     }
 
     /**
-     * TODO: describe your function here
+     * TODO: connect thingspeak IoT TCP server 
      */
     //% weight=98
     //% blockId="TCP_connect" block="connect thingspeak"
@@ -66,7 +66,7 @@ namespace ESP8266_IoT {
     }
 
     /**
-     * TODO: describe your function here
+     * TODO: Set data to be sent.
      * @param write_api_key describe parameter here, eg: "your write api key"
      * @param n1 describe parameter here, eg: 0
      * @param n2 describe parameter here, eg: 0
@@ -112,7 +112,7 @@ namespace ESP8266_IoT {
     }
 
     /**
-     * TODO: describe your function here
+     * TODO: send data
      */
     //% weight=96
     //% blockId=senddata block="send data to thingspeak"
