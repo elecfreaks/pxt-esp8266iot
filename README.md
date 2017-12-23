@@ -2,7 +2,7 @@
 
 ESP8266_IoT package is developed under the cooperation of [ELECFREAKS](https://www.elecfreaks.com/), [CLSAAROOM](http://www.classroom.com.hk/) and [TINKERCADEMY](https://tinkercademy.com/).
 
-This package uploads data to THINGSPEAK IOT through ESP8266 serial wifi module. For more details about ESP8266 module, you can visit: http://www.elecfreaks.com/estore/esp8266-serial-wifi-module.html
+This package uploads data to THINGSPEAK IOT through [ESP8266 serial wifi module](http://www.elecfreaks.com/estore/esp8266-serial-wifi-module.html). 
 
 Before start, you have to register an account of [thinkspeak](https://thingspeak.com/).
 
