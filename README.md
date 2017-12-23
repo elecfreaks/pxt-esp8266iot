@@ -16,7 +16,7 @@ Before start, you have to register an account of [thinkspeak](https://thingspeak
 
 ## Basic usage
 
-1. Open [Microsoft PXT/microbit](https://pxt.microbit.org) and new a project
+1. Open [Microsoft Makecode/microbit](https://pxt.microbit.org) and create a new project 
 2. Search and add the `ESP8266` package
 3. Use the `ESP8266` drawer in the editor to drag out and arrange the blocks
 4. Click `Download` to move your program to the micro:bit
