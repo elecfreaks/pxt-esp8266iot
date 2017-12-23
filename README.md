@@ -11,7 +11,7 @@ Before start, you have to register an account of [thinkspeak](https://thingspeak
 
 ## Hardware Setup
 
-1. Insert the OLED display into the I2C ports on the break out board.
+1. Insert the [OLED display](http://www.elecfreaks.com/estore/iic-oled.html) into the I2C ports on the [ELECFREAKS Octopus:bit](http://www.elecfreaks.com/estore/elecfreaks-micro-bit-breakout-board.html).
 
 
 ## Basic usage
