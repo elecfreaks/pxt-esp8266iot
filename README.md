@@ -36,7 +36,7 @@ Connectwifi，please fill in your ssid and your key.
 ESP8266_IoT.connectwifi("your ssid", "your key")
 ```
 
-### connectthingspeak
+### connect thingspeak
 Connect thingspeak IoT TCP server.
 ```blocks
 ESP8266_IoT.connectthingspeak()
