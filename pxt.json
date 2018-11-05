@@ -8,15 +8,6 @@
     },
     "files": [
         "README.md",
-        "ssd1306.ts",
-        "SSD1306_OLED.cpp",
-        "Adafruit_SSD1306.h",
-        "Adafruit_SSD1306.cpp",
-        "Adafruit_GFX.h",
-        "Adafruit_GFX.cpp",
-        "Adafruit_GFX_Config.h",
-        "glcdfont.h",
-        "enums.d.ts",
         "ESP8266.ts"
     ],
     "testFiles": [
