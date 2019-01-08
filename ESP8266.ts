@@ -41,7 +41,7 @@ namespace ESP8266_IoT {
      * @param key describe parameter here, eg: "your key"
      */
     //% weight=99
-    //% blockId="wifi_connect" block="connect wifi SSDI: %ssid| KEY: %key"
+    //% blockId="wifi_connect" block="connect wifi SSID: %ssid| KEY: %key"
     export function connectwifi(ssid: string, key: string): void {
         // Add code here
         let text = "AT+CWJAP=\""
