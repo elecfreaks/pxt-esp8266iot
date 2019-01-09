@@ -15,20 +15,20 @@ namespace ESP8266_IoT {
     let tobesendstring = ""
 
     /**
-     * TODO: Set pin RX and TX for ESP8266 Serial Wifi Module，Baud rate: 9600.
-     * @param wifiRX describe parameter here, eg: SerialPin.P0
-     * @param wifiTX describe parameter here, eg: SerialPin.P1
+     * TODO: Set pin RX and TX for ESP8266 Serial Wifi Module，Baud rate: 115200.
+     * @param wifiRX describe parameter here, eg: SerialPin.P8
+     * @param wifiTX describe parameter here, eg: SerialPin.P12
      */
     //% weight=100
-    //% blockId="wifi_init" block="set ESP8266 RX %wifiRX| TX %wifiTX|at baud rate 9600"
+    //% blockId="wifi_init" block="set ESP8266 RX %wifiRX| TX %wifiTX|at baud rate 115200"
     export function initwifi(wifiRX: SerialPin, wifiTX: SerialPin): void {
         serial.redirect(
             wifiRX,
             wifiTX,
-            BaudRate.BaudRate9600
+            BaudRate.BaudRate115200
         )
         basic.pause(10)
-        serial.writeString("AT+CWMODE=1" + "\u000D" + "\u000A")
+        serial.writeString("AT+CWMODE_CUR=1" + "\u000D" + "\u000A")
         basic.pause(5000)
         serial.writeString("AT+RST" + "\u000D" + "\u000A")
         basic.pause(5000)
@@ -44,7 +44,7 @@ namespace ESP8266_IoT {
     //% blockId="wifi_connect" block="connect wifi SSID: %ssid| KEY: %key"
     export function connectwifi(ssid: string, key: string): void {
         // Add code here
-        let text = "AT+CWJAP=\""
+        let text = "AT+CWJAP_CUR=\""
                  + ssid
                  + "\",\""
                  + key
