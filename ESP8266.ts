@@ -28,10 +28,11 @@ namespace ESP8266_IoT {
             BaudRate.BaudRate115200
         )
         basic.pause(10)
+        serial.writeString("AT+RESTORE" + "\u000D" + "\u000A")
+        basic.pause(5000)
         serial.writeString("AT+CWMODE_CUR=1" + "\u000D" + "\u000A")
         basic.pause(5000)
-        serial.writeString("AT+RST" + "\u000D" + "\u000A")
-        basic.pause(5000)
+
         // Add code here
     }
 
