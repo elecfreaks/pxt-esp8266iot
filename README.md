@@ -25,7 +25,7 @@ Before start, you have to register an account of [thingspeak](https://thingspeak
 ## Example
 
 ### set wifi
-Set pin RX and pin TX for ESP8266 Serial Wifi Module, Baud rate: 9600.
+Set pin RX and pin TX for ESP8266 Serial Wifi Module, Baud rate: 115200.
 ```blocks
 ESP8266_IoT.initwifi(SerialPin.P2, SerialPin.P8)
 ```
