@@ -29,7 +29,7 @@ namespace ESP8266_IoT {
         )
         basic.pause(10)
         serial.writeString("AT+RESTORE" + "\u000D" + "\u000A")
-        basic.pause(5000)
+        basic.pause(2000)
         serial.writeString("AT+CWMODE_CUR=1" + "\u000D" + "\u000A")
         basic.pause(5000)
 
@@ -137,7 +137,7 @@ namespace ESP8266_IoT {
     export function getmac(): void {
        serial.writeString("AT+CIPSTAMAC_CUR?" + "\u000D" + "\u000A")
 		basic.showString(serial.readString())
-        basic.pause(5000)
+        basic.pause(1000)
         // Add code here
     }
 
