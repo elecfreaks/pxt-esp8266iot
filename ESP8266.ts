@@ -136,7 +136,7 @@ namespace ESP8266_IoT {
     //% blockId=showmac block="show MAC address to led"
     export function getmac(): void {
        serial.writeString("AT+CIPSTAMAC_CUR?" + "\u000D" + "\u000A")
-		basic.showString(serial.readLine())
+		basic.showString(serial.readString())
         basic.pause(5000)
         // Add code here
     }
