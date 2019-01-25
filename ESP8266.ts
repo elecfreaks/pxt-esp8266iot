@@ -31,7 +31,7 @@ namespace ESP8266_IoT {
         basic.pause(10)
         serial.writeString("AT+RESTORE" + "\u000D" + "\u000A")
         basic.pause(2000)
-        serial.writeString("AT+CWMODE_CUR=1" + "\u000D" + "\u000A")
+        serial.writeString("AT+CWMODE=1" + "\u000D" + "\u000A")
         basic.pause(5000)
 
         // Add code here
@@ -46,7 +46,7 @@ namespace ESP8266_IoT {
     //% blockId="wifi_connect" block="connect wifi SSID: %ssid| KEY: %key"
     export function connectwifi(ssid: string, key: string): void {
         // Add code here
-        let text = "AT+CWJAP_CUR=\""
+        let text = "AT+CWJAP=\""
                  + ssid
                  + "\",\""
                  + key
