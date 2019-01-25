@@ -29,7 +29,7 @@ namespace ESP8266_IoT {
             baudrate
         )
         basic.pause(10)
-        serial.writeString("AT+R" + "\u000D" + "\u000A")
+        serial.writeString("AT+RST" + "\u000D" + "\u000A")
         basic.pause(2000)
         serial.writeString("AT+CWMODE=1" + "\u000D" + "\u000A")
         basic.pause(5000)
