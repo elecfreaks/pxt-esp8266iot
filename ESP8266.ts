@@ -4,9 +4,16 @@
 //% color=#0fbc11 icon="\uf1eb" weight=90
 namespace ESP8266_IoT {
 
-   let wifi_connected: boolean = false
+    let wifi_connected: boolean = false
     let thingspeak_connected: boolean = false
     let last_upload_successful: boolean = false
+
+    export enum State {
+        //% block="Success"
+        Success,
+        //% block="Fail"
+        Fail
+    }
 
     // write AT command with CR+LF ending
     function sendAT(command: string, wait: number = 100) {
@@ -92,25 +99,40 @@ namespace ESP8266_IoT {
     /**
     * Check if ESP8266 successfully connected to Wifi
     */
-    //% block="Wifi connected ?"
-    export function isWifiConnected() {
-        return wifi_connected
+    //% block="Wifi connected %State"
+    export function wifiState(state: boolean) {
+        if (wifi_connected == state) {
+            return true
+        }
+        else{
+            return false
+        }
     }
 
     /**
     * Check if ESP8266 successfully connected to ThingSpeak
     */
-    //% block="ThingSpeak connected ?"
-    export function isThingSpeakConnected() {
-        return thingspeak_connected
+    //% block="ThingSpeak connected %State"
+    export function thingSpeakState(state: boolean) {
+        if (wifi_connected == state) {
+            return true
+        }
+        else {
+            return false
+        }
     }
 
     /**
     * Check if ESP8266 successfully uploaded data to ThingSpeak
     */
-    //% block="Last data upload successful ?"
-    export function isLastUploadSuccessful() {
-        return last_upload_successful
+    //% block="Last data upload %State"
+    export function lastUploadState(state: boolean) {
+        if (wifi_connected == state) {
+            return true
+        }
+        else {
+            return false
+        }
     }
 
 }

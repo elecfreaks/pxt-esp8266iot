@@ -2,8 +2,8 @@
   "ESP8266_IoT": "Custom blocks",
   "ESP8266_IoT.connectThingSpeak": "Connect to ThingSpeak and upload data. It would not upload anything if it failed to connect to Wifi or ThingSpeak.",
   "ESP8266_IoT.connectWifi": "Initialize ESP8266 module and connect it to Wifi router",
-  "ESP8266_IoT.isLastUploadSuccessful": "Check if ESP8266 successfully uploaded data to ThingSpeak",
-  "ESP8266_IoT.isThingSpeakConnected": "Check if ESP8266 successfully connected to ThingSpeak",
-  "ESP8266_IoT.isWifiConnected": "Check if ESP8266 successfully connected to Wifi",
-  "ESP8266_IoT.wait": "Wait between uploads"
+  "ESP8266_IoT.lastUploadState": "Check if ESP8266 successfully uploaded data to ThingSpeak",
+  "ESP8266_IoT.thingSpeakState": "Check if ESP8266 successfully connected to ThingSpeak",
+  "ESP8266_IoT.wait": "Wait between uploads",
+  "ESP8266_IoT.wifiState": "Check if ESP8266 successfully connected to Wifi"
 }
