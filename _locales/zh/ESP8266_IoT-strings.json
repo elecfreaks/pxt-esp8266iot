@@ -7,6 +7,6 @@
   "ESP8266_IoT.thingSpeakState|block": "ThingSpeak 平台连接 %State",
   "ESP8266_IoT.wait|block": "等待 %delay 毫秒(ms)",
   "ESP8266_IoT.wifiState|block": "WIFI 连接 %State",
-  "ESP8266_IoT|block": "IoT",
-  "{id:category}ESP8266_IoT": "IoT"
+  "ESP8266_IoT|block": "物联网IoT",
+  "{id:category}ESP8266_IoT": "物联网IoT"
 }
