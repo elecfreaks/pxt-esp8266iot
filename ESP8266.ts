@@ -47,7 +47,7 @@ namespace ESP8266_IoT {
     //% tx.defl=SerialPin.P8
     //% rx.defl=SerialPin.P12
     //% ssid.defl=your_ssid
-    //% pw.defl=your_pw
+    //% pw.defl=your_password
     export function initWIFI(tx: SerialPin, rx: SerialPin, baudrate: BaudRate) {
         wifi_connected = false
         thingspeak_connected = false
