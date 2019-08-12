@@ -1,12 +1,15 @@
 {
   "ESP8266_IoT.State.Fail|block": "失败",
   "ESP8266_IoT.State.Success|block": "成功",
-  "ESP8266_IoT.connectThingSpeak|block": "上传数据到 ThingSpeak 平台|URL/IP = %ip|Write API key = %write_api_key|Field 1 = %n1|Field 2 = %n2|Field 3 = %n3|Field 4 = %n4|Field 5 = %n5|Field 6 = %n6|Field 7 = %n7|Field 8 = %n8",
-  "ESP8266_IoT.connectWifi|block": "初始化ESP8266IoT模块|RX (micro:bit 的 Tx) %tx|TX (micro:bit 的 Rx) %rx|模块波特率 %baudrate|Wifi 名称 = %ssid|Wifi 密码 = %pw",
-  "ESP8266_IoT.lastUploadState|block": "上一次数据上传 %State",
-  "ESP8266_IoT.thingSpeakState|block": "ThingSpeak 平台连接 %State",
-  "ESP8266_IoT.wait|block": "等待 %delay 毫秒(ms)",
-  "ESP8266_IoT.wifiState|block": "WIFI 连接 %State",
-  "ESP8266_IoT|block": "物联网IoT",
-  "{id:category}ESP8266_IoT": "物联网IoT"
+  "ESP8266_IoT.connectThingSpeak|block": "连接ThingSpeak平台",
+  "ESP8266_IoT.connectWifi|block": "连接WIFI无线网络 Wifi 名称 = %ssid|密码 = %pw",
+  "ESP8266_IoT.initWIFI|block": "设置 ESP8266 模块|RX %tx|TX %rx|波特率 %baudrate",
+  "ESP8266_IoT.lastUploadState|block": "上一次上传数据 %State",
+  "ESP8266_IoT.setdata|block": "设置发送到ThingSpeak平台的数据|Write API key = %write_api_key|Field 1 = %n1|Field 2 = %n2|Field 3 = %n3|Field 4 = %n4|Field 5 = %n5|Field 6 = %n6|Field 7 = %n7|Field 8 = %n8",
+  "ESP8266_IoT.thingSpeakState|block": "ThingSpeak平台连接 %State",
+  "ESP8266_IoT.uploadData|block": "上传数据到 ThingSpeak平台",
+  "ESP8266_IoT.wait|block": "等待 %delay ms",
+  "ESP8266_IoT.wifiState|block": "Wifi连接 %State",
+  "ESP8266_IoT|block": "物联网模块",
+  "{id:category}ESP8266_IoT": "物联网模块"
 }
