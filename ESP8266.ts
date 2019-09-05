@@ -199,7 +199,7 @@ namespace ESP8266_IoT {
     * Connect to kitsiot
     */
     //% subcategory=KidsIot
-    //% blockId=initkitiot block="connect KidsIot with userToken: %userToken Topic: %topic"
+    //% blockId=initkitiot block="Connect KidsIot with userToken: %userToken Topic: %topic"
     export function connectKidsiot(userToken: string, topic: string): void {
         if (wifi_connected && thingspeak_connected == false) {
             userToken_def = userToken
@@ -215,7 +215,7 @@ namespace ESP8266_IoT {
     * upload data to kitsiot
     */
     //% subcategory=KidsIot
-    //% blockId=uploadkitsiot block="upload data %data to kidsiot"
+    //% blockId=uploadkitsiot block="Upload data %data to kidsiot"
     export function uploadKidsiot(data: number): void {
         if (kitsiot_connected) {
             data = Math.floor(data)
@@ -228,7 +228,7 @@ namespace ESP8266_IoT {
     * disconnect from kitsiot
     */
     //% subcategory=KidsIot
-    //% blockId=Disconnect block="Disconnect from kidsiot"
+    //% blockId=Disconnect block="Disconnect with kidsiot"
     export function disconnectKidsiot(): void {
         if (kitsiot_connected) {
             let text_one = "{\"topic\":\"" + topic_def + "\",\"userToken\":\"" + userToken_def + "\",\"op\":\"close\"}"
@@ -240,7 +240,7 @@ namespace ESP8266_IoT {
     /**
     * Check if ESP8266 successfully connected to KidsIot
     */
-    //% block="KidsIot connected %State"
+    //% block="KidsIot connection %State"
     //% subcategory="KidsIot"
     export function kidsiotState(state: boolean) {
         if (kitsiot_connected == state) {
@@ -253,7 +253,7 @@ namespace ESP8266_IoT {
     /**
 * recevice value from kidsiot
 */
-    //% block="when switch on"
+    //% block="When switch on"
     //% subcategory=KidsIot
     export function iotswitchon(handler: () => void) {
         recevice_kitiot()
@@ -262,7 +262,7 @@ namespace ESP8266_IoT {
     /**
      * recevice value from kidsiot
      */
-    //% block="when switch off"
+    //% block="When switch off"
     //% subcategory=KidsIot
     export function iotswitchoff(handler: () => void) {
         recevice_kitiot()
