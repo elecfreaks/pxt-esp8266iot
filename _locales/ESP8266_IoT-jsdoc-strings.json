@@ -1,12 +1,18 @@
 {
   "ESP8266_IoT": "Custom blocks",
+  "ESP8266_IoT.connectKidsiot": "Connect to kitsiot",
   "ESP8266_IoT.connectThingSpeak": "Connect to ThingSpeak",
   "ESP8266_IoT.connectWifi": "connect to Wifi router",
+  "ESP8266_IoT.disconnectKidsiot": "disconnect from kitsiot",
   "ESP8266_IoT.initWIFI": "Initialize ESP8266 module",
-  "ESP8266_IoT.lastUploadState": "Check if ESP8266 successfully uploaded data to ThingSpeak",
+  "ESP8266_IoT.iotswitchoff": "recevice value from kidsiot",
+  "ESP8266_IoT.iotswitchon": "recevice value from kidsiot",
+  "ESP8266_IoT.kidsiotState": "Check if ESP8266 successfully connected to KidsIot",
   "ESP8266_IoT.setdata": "Connect to ThingSpeak and set data.",
   "ESP8266_IoT.thingSpeakState": "Check if ESP8266 successfully connected to ThingSpeak",
+  "ESP8266_IoT.tsLastUploadState": "Check if ESP8266 successfully uploaded data to ThingSpeak",
   "ESP8266_IoT.uploadData": "upload data. It would not upload anything if it failed to connect to Wifi or ThingSpeak.",
+  "ESP8266_IoT.uploadKidsiot": "upload data to kitsiot",
   "ESP8266_IoT.wait": "Wait between uploads",
   "ESP8266_IoT.wifiState": "Check if ESP8266 successfully connected to Wifi"
 }
