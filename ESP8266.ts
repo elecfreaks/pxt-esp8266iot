@@ -39,7 +39,7 @@ namespace ESP8266_IoT {
             serial_str += serial.readString()
             if (serial_str.length > 200)
                 serial_str = serial_str.substr(serial_str.length - 200)
-            if (serial_str.includes("OK") || serial_str.includes("ALREADY CONNECTED")) {
+            if (serial_str.includes("OK") || serial_str.includes("ALREADY CONNECTED") || serial_str.includes("WIFI GOT IP") || serial_str.includes("CONNECT")) {
                 result = true
                 break
             }
