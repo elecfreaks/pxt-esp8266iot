@@ -1,7 +1,7 @@
 /**
  * Custom blocks
  */
-//% color=#0fbc11 icon="\uf1eb" weight=90
+//% color=#0fbc11 icon="\uf1eb" weight=0
 namespace ESP8266_IoT {
 
     let wifi_connected: boolean = false
