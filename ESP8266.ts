@@ -39,7 +39,7 @@ namespace ESP8266_IoT {
             serial_str += serial.readString()
             if (serial_str.length > 200)
                 serial_str = serial_str.substr(serial_str.length - 200)
-            if (serial_str.includes("OK") || serial_str.includes("ALREADY CONNECTED") || serial_str.includes("WIFI GOT IP") || serial_str.includes("CONNECT")) {
+            if (serial_str.includes("WIFI GOT IP") || serial_str.includes("WIFI CONNECT")) {
                 result = true
                 break
             }
@@ -68,8 +68,7 @@ namespace ESP8266_IoT {
         )
         sendAT("AT+RESTORE", 1000) // restore to factory settings
         sendAT("AT+CWMODE=1") // set to STA mode
-        sendAT("AT+RST", 1000) // reset
-        basic.pause(100)
+        basic.pause(1000)
     }
     /**
     * connect to Wifi router
@@ -78,13 +77,12 @@ namespace ESP8266_IoT {
     //% ssid.defl=your_ssid
     //% pw.defl=your_pw weight=95
     export function connectWifi(ssid: string, pw: string) {
-
         wifi_connected = false
         thingspeak_connected = false
         kitsiot_connected = false
         sendAT("AT+CWJAP=\"" + ssid + "\",\"" + pw + "\"", 0) // connect to Wifi router
         wifi_connected = waitResponse()
-        basic.pause(100)
+        basic.pause(2000)
     }
     /**
     * Connect to ThingSpeak
@@ -194,6 +192,27 @@ namespace ESP8266_IoT {
         }
     }
     /*-----------------------------------kitsiot---------------------------------*/
+    function waitconnectKidsiot(): boolean {
+        let serial_str: string = ""
+        let result: boolean = false
+        let time: number = input.runningTime()
+        while (true) {
+            serial_str += serial.readString()
+            if (serial_str.length > 200)
+                serial_str = serial_str.substr(serial_str.length - 200)
+            if (serial_str.includes("CONNECTED") || serial_str.includes("ALREADY CONNECTED")|| serial_str.includes("SEND OK")) {
+                result = true
+                break
+            }
+            else if (serial_str.includes("ERROR") || serial_str.includes("FAIL")) {
+                break
+            }
+            else if (input.runningTime() - time > 8000) {
+                break
+            }
+        }
+        return result
+    }
     /**
     * Connect to kitsiot
     */
@@ -204,10 +223,13 @@ namespace ESP8266_IoT {
             userToken_def = userToken
             topic_def = topic
             sendAT("AT+CIPSTART=\"TCP\",\"139.159.161.57\",5555", 0) // connect to website server
+            while(!waitconnectKidsiot()){
+                    sendAT("AT+CIPSTART=\"TCP\",\"139.159.161.57\",5555", 0) // connect to website server
+            }
             let text_one = "{\"topic\":\"" + topic + "\",\"userToken\":\"" + userToken + "\",\"op\":\"init\"}"
-            sendAT("AT+CIPSEND=" + (text_one.length + 2),0)
+            sendAT("AT+CIPSEND=" + (text_one.length + 2),100)
             sendAT(text_one, 0)
-            kitsiot_connected = waitResponse()
+            kitsiot_connected = waitconnectKidsiot()
         }
     }
     /**
@@ -219,7 +241,7 @@ namespace ESP8266_IoT {
         if (kitsiot_connected) {
             data = Math.floor(data)
             let text_one = "{\"topic\":\"" + topic_def + "\",\"userToken\":\"" + userToken_def + "\",\"op\":\"up\",\"data\":\"" + data + "\"}"
-            sendAT("AT+CIPSEND=" + (text_one.length + 2),0)
+            sendAT("AT+CIPSEND=" + (text_one.length + 2),100)
             sendAT(text_one, 0)
         }
     }
@@ -231,7 +253,7 @@ namespace ESP8266_IoT {
     export function disconnectKidsiot(): void {
         if (kitsiot_connected) {
             let text_one = "{\"topic\":\"" + topic_def + "\",\"userToken\":\"" + userToken_def + "\",\"op\":\"close\"}"
-            sendAT("AT+CIPSEND=" + (text_one.length + 2),0)
+            sendAT("AT+CIPSEND=" + (text_one.length + 2),100)
             sendAT(text_one, 0)
             kitsiot_connected = !waitResponse()
         }
