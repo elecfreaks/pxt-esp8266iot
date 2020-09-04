@@ -217,7 +217,7 @@ namespace ESP8266_IoT {
         if (wifi_connected && thingspeak_connected == false) {
             userToken_def = userToken
             topic_def = topic
-            sendAT("AT+CIPSTART=\"TCP\",\"139.159.161.57\",5555", 3000) // connect to website server
+            sendAT("AT+CIPSTART=\"TCP\",\"139.159.161.57\",5555", 5000) // connect to website server
             let text_one = "{\"topic\":\"" + topic + "\",\"userToken\":\"" + userToken + "\",\"op\":\"init\"}"
             sendAT("AT+CIPSEND=" + (text_one.length + 2),500)
             sendAT(text_one, 1000)
