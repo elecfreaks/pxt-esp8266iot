@@ -39,14 +39,11 @@ namespace ESP8266_IoT {
             serial_str += serial.readString()
             if (serial_str.length > 200)
                 serial_str = serial_str.substr(serial_str.length - 200)
-            if (serial_str.includes("WIFI GOT IP") || serial_str.includes("WIFI CONNECT")) {
+            if (serial_str.includes("WIFI GOT IP")) {
                 result = true
                 break
             }
-            if (serial_str.includes("ERROR") || serial_str.includes("FAIL")) {
-                break
-            }
-            if (input.runningTime() - time > 5000) {
+            else if (input.runningTime() - time > 5000) {
                 break
             }
         }
@@ -82,7 +79,7 @@ namespace ESP8266_IoT {
         kitsiot_connected = false
         sendAT("AT+CWJAP=\"" + ssid + "\",\"" + pw + "\"", 0) // connect to Wifi router
         wifi_connected = waitResponse()
-        basic.pause(2000)
+        basic.pause(3000)
     }
     /**
     * Connect to ThingSpeak
@@ -202,9 +199,7 @@ namespace ESP8266_IoT {
                 serial_str = serial_str.substr(serial_str.length - 200)
             if (serial_str.includes("CONNECTED") || serial_str.includes("ALREADY CONNECTED")|| serial_str.includes("SEND OK")) {
                 result = true
-                break
-            }
-            else if (serial_str.includes("ERROR") || serial_str.includes("FAIL")) {
+                kitsiot_connected = true
                 break
             }
             else if (input.runningTime() - time > 8000) {
@@ -223,13 +218,12 @@ namespace ESP8266_IoT {
             userToken_def = userToken
             topic_def = topic
             sendAT("AT+CIPSTART=\"TCP\",\"139.159.161.57\",5555", 0) // connect to website server
-            while(!waitconnectKidsiot()){
+            if(!waitconnectKidsiot()){
                     sendAT("AT+CIPSTART=\"TCP\",\"139.159.161.57\",5555", 0) // connect to website server
             }
             let text_one = "{\"topic\":\"" + topic + "\",\"userToken\":\"" + userToken + "\",\"op\":\"init\"}"
-            sendAT("AT+CIPSEND=" + (text_one.length + 2),100)
-            sendAT(text_one, 0)
-            kitsiot_connected = waitconnectKidsiot()
+            sendAT("AT+CIPSEND=" + (text_one.length + 2),500)
+            sendAT(text_one, 1000)
         }
     }
     /**
@@ -241,8 +235,8 @@ namespace ESP8266_IoT {
         if (kitsiot_connected) {
             data = Math.floor(data)
             let text_one = "{\"topic\":\"" + topic_def + "\",\"userToken\":\"" + userToken_def + "\",\"op\":\"up\",\"data\":\"" + data + "\"}"
-            sendAT("AT+CIPSEND=" + (text_one.length + 2),100)
-            sendAT(text_one, 0)
+            sendAT("AT+CIPSEND=" + (text_one.length + 2),500)
+            sendAT(text_one, 1000)
         }
     }
     /**
@@ -255,7 +249,7 @@ namespace ESP8266_IoT {
             let text_one = "{\"topic\":\"" + topic_def + "\",\"userToken\":\"" + userToken_def + "\",\"op\":\"close\"}"
             sendAT("AT+CIPSEND=" + (text_one.length + 2),100)
             sendAT(text_one, 0)
-            kitsiot_connected = !waitResponse()
+            kitsiot_connected = false
         }
     }
     /**
