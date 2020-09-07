@@ -43,7 +43,7 @@ namespace ESP8266_IoT {
                 result = true
                 break
             }
-            else if (input.runningTime() - time > 5000) {
+            else if (input.runningTime() - time > 10000) {
                 break
             }
         }
@@ -202,7 +202,7 @@ namespace ESP8266_IoT {
                 kitsiot_connected = true
                 break
             }
-            else if (input.runningTime() - time > 8000) {
+            else if (input.runningTime() - time > 10000) {
                 break
             }
         }
