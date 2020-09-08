@@ -81,6 +81,25 @@ namespace ESP8266_IoT {
         wifi_connected = waitResponse()
         basic.pause(3000)
     }
+        // wait for certain response from ESP8266
+    function waitTSResponse(): boolean {
+        let serial_str: string = ""
+        let result: boolean = false
+        let time: number = input.runningTime()
+        while (true) {
+            serial_str += serial.readString()
+            if (serial_str.length > 200)
+                serial_str = serial_str.substr(serial_str.length - 200)
+            if (serial_str.includes("CONNECT")) {
+                result = true
+                break
+            }
+            else if (input.runningTime() - time > 10000) {
+                break
+            }
+        }
+        return result
+    }
     /**
     * Connect to ThingSpeak
     */
@@ -92,7 +111,7 @@ namespace ESP8266_IoT {
             thingspeak_connected = false
             let text = "AT+CIPSTART=\"TCP\",\"api.thingspeak.com\",80"
             sendAT(text, 0) // connect to website server
-            thingspeak_connected = waitResponse()
+            thingspeak_connected = waitTSResponse()
             basic.pause(100)
         }
     }
@@ -123,6 +142,24 @@ namespace ESP8266_IoT {
                 + "&field8="
                 + n8
     }
+    function waitUPTSResponse(): boolean {
+        let serial_str: string = ""
+        let result: boolean = false
+        let time: number = input.runningTime()
+        while (true) {
+            serial_str += serial.readString()
+            if (serial_str.length > 200)
+                serial_str = serial_str.substr(serial_str.length - 200)
+            if (serial_str.includes("SEND OK")) {
+                result = true
+                break
+            }
+            else if (input.runningTime() - time > 10000) {
+                break
+            }
+        }
+        return result
+    }
     /**
     * upload data. It would not upload anything if it failed to connect to Wifi or ThingSpeak.
     */
@@ -133,7 +170,7 @@ namespace ESP8266_IoT {
             last_upload_successful = false
             sendAT("AT+CIPSEND=" + (toSendStr.length + 2), 100)
             sendAT(toSendStr, 100) // upload data
-            last_upload_successful = waitResponse()
+            last_upload_successful = waitUPTSResponse()
             basic.pause(100)
         }
     }
