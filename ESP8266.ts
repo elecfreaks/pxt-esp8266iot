@@ -1,9 +1,5 @@
-/**
- * Custom blocks
- */
 //% color=#0fbc11 icon="\uf1eb"
 namespace ESP8266_IoT {
-
     let wifi_connected: boolean = false
     let thingspeak_connected: boolean = false
     let kitsiot_connected: boolean = false
@@ -78,27 +74,32 @@ namespace ESP8266_IoT {
         thingspeak_connected = false
         kitsiot_connected = false
         sendAT("AT+CWJAP=\"" + ssid + "\",\"" + pw + "\"", 0) // connect to Wifi router
-        wifi_connected = waitResponse()
-        basic.pause(3000)
-    }
-        // wait for certain response from ESP8266
-    function waitTSResponse(): boolean {
+
         let serial_str: string = ""
-        let result: boolean = false
         let time: number = input.runningTime()
         while (true) {
             serial_str += serial.readString()
-            if (serial_str.length > 200)
-                serial_str = serial_str.substr(serial_str.length - 200)
-            if (serial_str.includes("CONNECT")) {
-                result = true
+            if (serial_str.length > 50)
+                serial_str = serial_str.substr(serial_str.length - 50)
+            if (serial_str.includes("WIFI GOT IP") || serial_str.includes("OK")) {
+                serial_str=""
+                wifi_connected = true
                 break
             }
-            else if (input.runningTime() - time > 10000) {
+            if (serial_str.includes("FAIL")) {
+                serial_str=""
+                wifi_connected = false
+                connectWifi(ssid,pw)
+                break
+            }
+            if (serial_str.includes("WIFI CONNECTED")){}
+            else if(input.runningTime() - time > 10000) {
+                wifi_connected = false
+                connectWifi(ssid,pw)
                 break
             }
         }
-        return result
+        basic.pause(2000)
     }
     /**
     * Connect to ThingSpeak
@@ -111,8 +112,30 @@ namespace ESP8266_IoT {
             thingspeak_connected = false
             let text = "AT+CIPSTART=\"TCP\",\"api.thingspeak.com\",80"
             sendAT(text, 0) // connect to website server
-            thingspeak_connected = waitTSResponse()
-            basic.pause(100)
+            basic.pause(2000)
+            thingspeak_connected=true
+            /*
+            let serial_str: string = ""
+            let time: number = input.runningTime()
+            while (true) {
+                serial_str += serial.readString()
+                if (serial_str.length > 100)
+                    serial_str = serial_str.substr(serial_str.length - 100)
+                if (serial_str.includes("CONNECT") || serial_str.includes("OK")){
+                    thingspeak_connected = true
+                    break
+                }
+                if (serial_str.includes("ERROR") || serial_str.includes("CLOSED")) {
+                    thingspeak_connected = false
+                    break
+                }
+                if (input.runningTime() - time > 10000) {
+                    thingspeak_connected = false
+                    break
+                }
+            }
+            */
+            //basic.pause(1000)
         }
     }
     /**
@@ -226,25 +249,6 @@ namespace ESP8266_IoT {
         }
     }
     /*-----------------------------------kitsiot---------------------------------*/
-    function waitconnectKidsiot(): boolean {
-        let serial_str: string = ""
-        let result: boolean = false
-        let time: number = input.runningTime()
-        while (true) {
-            serial_str += serial.readString()
-            if (serial_str.length > 200)
-                serial_str = serial_str.substr(serial_str.length - 200)
-            if (serial_str.includes("CONNECTED") || serial_str.includes("ALREADY CONNECTED")|| serial_str.includes("SEND OK")) {
-                result = true
-                kitsiot_connected = true
-                break
-            }
-            else if (input.runningTime() - time > 10000) {
-                break
-            }
-        }
-        return result
-    }
     /**
     * Connect to kitsiot
     */
