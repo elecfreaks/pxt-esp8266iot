@@ -2,7 +2,8 @@
 namespace ESP8266_IoT {
     let wifi_connected: boolean = false
     let thingspeak_connected: boolean = false
-    let kitsiot_connected: boolean = false
+    let kidsiot_connected: boolean = false
+    let kidsiot_init: boolean = false
     let last_upload_successful: boolean = false
     let userToken_def: string = ""
     let topic_def: string = ""
@@ -60,8 +61,10 @@ namespace ESP8266_IoT {
             baudrate
         )
         sendAT("AT+RESTORE", 1000) // restore to factory settings
+        sendAT("ATE0") // disable echo
         sendAT("AT+CWMODE=1") // set to STA mode
-        basic.pause(1000)
+        serial.readBuffer(0)
+        basic.pause(100)
     }
     /**
     * connect to Wifi router
@@ -72,16 +75,15 @@ namespace ESP8266_IoT {
     export function connectWifi(ssid: string, pw: string) {
         wifi_connected = false
         thingspeak_connected = false
-        kitsiot_connected = false
+        kidsiot_connected = false
         sendAT("AT+CWJAP=\"" + ssid + "\",\"" + pw + "\"", 0) // connect to Wifi router
-
         let serial_str: string = ""
         let time: number = input.runningTime()
         while (true) {
-            serial_str += serial.readString()
+            serial_str = serial.readLine()
             if (serial_str.length > 50)
                 serial_str = serial_str.substr(serial_str.length - 50)
-            if (serial_str.includes("WIFI GOT IP") || serial_str.includes("OK")) {
+            if (serial_str.includes("WIFI GOT IP")) {
                 serial_str=""
                 wifi_connected = true
                 break
@@ -89,17 +91,16 @@ namespace ESP8266_IoT {
             if (serial_str.includes("FAIL")) {
                 serial_str=""
                 wifi_connected = false
-                connectWifi(ssid,pw)
                 break
             }
-            if (serial_str.includes("WIFI CONNECTED")){}
-            else if(input.runningTime() - time > 10000) {
+            if (input.runningTime() - time > 10000){
+                serial_str=""
                 wifi_connected = false
-                connectWifi(ssid,pw)
                 break
             }
+
         }
-        basic.pause(2000)
+        basic.pause(1000)
     }
     /**
     * Connect to ThingSpeak
@@ -108,7 +109,7 @@ namespace ESP8266_IoT {
     //% write_api_key.defl=your_write_api_key
     //% subcategory="ThingSpeak" weight=90
     export function connectThingSpeak() {
-        if (wifi_connected && kitsiot_connected == false) {
+        if (wifi_connected && kidsiot_connected == false) {
             thingspeak_connected = false
             let text = "AT+CIPSTART=\"TCP\",\"api.thingspeak.com\",80"
             sendAT(text, 0) // connect to website server
@@ -248,99 +249,114 @@ namespace ESP8266_IoT {
             return false
         }
     }
-    /*-----------------------------------kitsiot---------------------------------*/
+     /*-----------------------------------kidsiot---------------------------------*/
+    export function waitFeedBack(): boolean{
+        let serial_str: string = ""
+        let time: number = input.runningTime()
+        while (true) {
+            serial_str = serial.readLine()
+            if (serial_str.length > 50)
+                serial_str = serial_str.substr(serial_str.length - 50)
+            if (serial_str.includes("CONNECT") ||serial_str.includes("OK")||serial_str.includes("SEND OK")){
+                return true
+            }
+            if (input.runningTime() - time > 10000) {
+                return false
+            }
+        }
+    }
     /**
-    * Connect to kitsiot
+    * Connect to kidsiot
     */
-    //% subcategory=KidsIot weight=55
-    //% blockId=initkitiot block="Connect KidsIot with userToken: %userToken Topic: %topic"
+    //% subcategory=KidsIot weight=50
+    //% blockId=initkidiot block="Connect KidsIot with userToken: %userToken Topic: %topic"
     export function connectKidsiot(userToken: string, topic: string): void {
         if (wifi_connected && thingspeak_connected == false) {
             userToken_def = userToken
             topic_def = topic
-            sendAT("AT+CIPSTART=\"TCP\",\"139.159.161.57\",5555", 5000) // connect to website server
-            let text_one = "{\"topic\":\"" + topic + "\",\"userToken\":\"" + userToken + "\",\"op\":\"init\"}"
-            sendAT("AT+CIPSEND=" + (text_one.length + 2),500)
-            sendAT(text_one, 1000)
-            kitsiot_connected=true
+            sendAT("AT+CIPSTART=\"TCP\",\"139.159.161.57\",5555", 0) // connect to website server
+            kidsiot_init =  waitFeedBack()
+            if(kidsiot_init){
+                let jsonText = "{\"topic\":\"" + topic + "\",\"userToken\":\"" + userToken + "\",\"op\":\"init\"}"
+                sendAT("AT+CIPSEND=" + (jsonText.length + 2), 0)
+                while(!waitFeedBack()){
+                    basic.pause(500)
+                }
+                sendAT(jsonText, 0)
+                kidsiot_connected = waitFeedBack()
+            }
         }
     }
     /**
-    * upload data to kitsiot
-    */
-    //% subcategory=KidsIot weight=50
-    //% blockId=uploadkitsiot block="Upload data %data to kidsiot"
-    export function uploadKidsiot(data: number): void {
-        if (kitsiot_connected) {
-            data = Math.floor(data)
-            let text_one = "{\"topic\":\"" + topic_def + "\",\"userToken\":\"" + userToken_def + "\",\"op\":\"up\",\"data\":\"" + data + "\"}"
-            sendAT("AT+CIPSEND=" + (text_one.length + 2),500)
-            sendAT(text_one, 1000)
-        }
-    }
-    /**
-    * disconnect from kitsiot
+    * upload data to kidsiot
     */
     //% subcategory=KidsIot weight=45
+    //% blockId=uploadkidsiot block="Upload data %data to kidsiot"
+    export function uploadKidsiot(data: number): void {
+        if (kidsiot_connected) {
+            data = Math.floor(data)
+            let jsonText = "{\"topic\":\"" + topic_def + "\",\"userToken\":\"" + userToken_def + "\",\"op\":\"up\",\"data\":\"" + data + "\"}"
+            sendAT("AT+CIPSEND=" + (jsonText.length + 2), 0)
+            basic.pause(1000)
+            sendAT(jsonText, 0)
+            basic.pause(1000)
+        }
+    }
+    /**
+    * disconnect from kidsiot
+    */
+    //% subcategory=KidsIot weight=40
     //% blockId=Disconnect block="Disconnect with kidsiot"
     export function disconnectKidsiot(): void {
-        if (kitsiot_connected) {
+        if (kidsiot_connected) {
             let text_one = "{\"topic\":\"" + topic_def + "\",\"userToken\":\"" + userToken_def + "\",\"op\":\"close\"}"
-            sendAT("AT+CIPSEND=" + (text_one.length + 2),100)
+            sendAT("AT+CIPSEND=" + (text_one.length + 2), 0)
+            basic.pause(1000)
             sendAT(text_one, 0)
-            kitsiot_connected = false
+            kidsiot_connected = false
         }
     }
     /**
     * Check if ESP8266 successfully connected to KidsIot
     */
     //% block="KidsIot connection %State"
-    //% subcategory="KidsIot" weight=40
+    //% subcategory="KidsIot" weight=35
     export function kidsiotState(state: boolean) {
-        if (kitsiot_connected == state) {
-            return true
-        }
-        else {
-            return false
-        }
-    }
-    /**
-* recevice value from kidsiot
-*/
-    //% block="When switch on"
-    //% subcategory=KidsIot weight=35
-    export function iotswitchon(handler: () => void) {
-        recevice_kitiot()
-        control.onEvent(EVENT_ON_ID, EVENT_ON_Value, handler)
-    }
-    /**
-     * recevice value from kidsiot
-     */
-    //% block="When switch off"
-    //% subcategory=KidsIot weight=30
-    export function iotswitchoff(handler: () => void) {
-        recevice_kitiot()
-        control.onEvent(EVENT_OFF_ID, EVENT_OFF_Value, handler)
+        return kidsiot_connected == state
     }
 
-    export function recevice_kitiot() {
-        control.inBackground(function () {
-            while (kidsiotState) {
-                recevice_kidiot_text = serial.readLine()
-                recevice_kidiot_text += serial.readString()
-                if (recevice_kidiot_text.includes("CLOSED")) {
-                    recevice_kidiot_text = ""
-                    kitsiot_connected = false
-                }
-                if (recevice_kidiot_text.includes("switchon")) {
-                    recevice_kidiot_text = ""
-                    control.raiseEvent(EVENT_ON_ID, EVENT_ON_Value, EventCreationMode.CreateAndFire)
-                }
-                if (recevice_kidiot_text.includes("switchof")) {
-                    recevice_kidiot_text = ""
-                    control.raiseEvent(EVENT_OFF_ID, EVENT_OFF_Value, EventCreationMode.CreateAndFire)
+    export enum stateList {
+        //% block="on"
+        on = 1,
+        //% block="off"
+        off = 2
+    }
+    let KidsIoTButtonEventID = 3800
+    //% block="When switch %vocabulary"
+    //% subcategory="KidsIot" weight=30
+    //% state.fieldEditor="gridpicker" state.fieldOptions.columns=2
+    export function iotSwitchEvent(state: stateList, handler: () => void) {
+        control.onEvent(KidsIoTButtonEventID, state, handler)
+        control.inBackground(() => {
+            while (true) {
+                if(kidsiot_connected){
+                    recevice_kidiot_text = serial.readLine()
+                    recevice_kidiot_text += serial.readString()
+                    if (recevice_kidiot_text.includes("switchon")) {
+                        recevice_kidiot_text = ""
+                        control.raiseEvent(KidsIoTButtonEventID, 1, EventCreationMode.CreateAndFire)
+                    }
+                    if (recevice_kidiot_text.includes("switchof")) {
+                        recevice_kidiot_text = ""
+                        control.raiseEvent(KidsIoTButtonEventID, 2, EventCreationMode.CreateAndFire)
+                    }
+                    if (recevice_kidiot_text.includes("CLOSED")){
+                        recevice_kidiot_text = ""
+                        kidsiot_connected = false
+                    }
                 }
                 basic.pause(20)
+                
             }
         })
     }
