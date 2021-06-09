@@ -27,25 +27,6 @@ namespace ESP8266_IoT {
         basic.pause(wait)
     }
 
-    // wait for certain response from ESP8266
-    function waitResponse(): boolean {
-        let serial_str: string = ""
-        let result: boolean = false
-        let time: number = input.runningTime()
-        while (true) {
-            serial_str += serial.readString()
-            if (serial_str.length > 200)
-                serial_str = serial_str.substr(serial_str.length - 200)
-            if (serial_str.includes("WIFI GOT IP")) {
-                result = true
-                break
-            }
-            else if (input.runningTime() - time > 10000) {
-                break
-            }
-        }
-        return result
-    }
     /**
     * Initialize ESP8266 module 
     */
@@ -63,7 +44,6 @@ namespace ESP8266_IoT {
         sendAT("AT+RESTORE", 1000) // restore to factory settings
         sendAT("ATE0") // disable echo
         sendAT("AT+CWMODE=1") // set to STA mode
-        serial.readBuffer(0)
         basic.pause(100)
     }
     /**
@@ -73,11 +53,13 @@ namespace ESP8266_IoT {
     //% ssid.defl=your_ssid
     //% pw.defl=your_pw weight=95
     export function connectWifi(ssid: string, pw: string) {
+        let serial_str: string = ""
+        serial_str = serial.readString()
         wifi_connected = false
         thingspeak_connected = false
         kidsiot_connected = false
         sendAT("AT+CWJAP=\"" + ssid + "\",\"" + pw + "\"", 0) // connect to Wifi router
-        let serial_str: string = ""
+        
         let time: number = input.runningTime()
         while (true) {
             serial_str = serial.readLine()
@@ -191,6 +173,8 @@ namespace ESP8266_IoT {
     //% subcategory="ThingSpeak" weight=80
     export function uploadData() {
         if (thingspeak_connected) {
+            let serial_str: string = ""
+            serial_str = serial.readString()
             last_upload_successful = false
             sendAT("AT+CIPSEND=" + (toSendStr.length + 2), 100)
             sendAT(toSendStr, 100) // upload data
@@ -213,11 +197,23 @@ namespace ESP8266_IoT {
     */
     //% block="Wifi connected %State" weight=70
     export function wifiState(state: boolean) {
-        if (wifi_connected == state) {
-            return true
-        }
-        else {
-            return false
+        let serial_str: string = ""
+        serial_str = serial.readString()
+        sendAT("AT+CWJAP?", 0) // connect to Wifi router
+        let time: number = input.runningTime()
+        while (true) {
+            serial_str = serial.readString()
+            if (serial_str.length > 50)
+                serial_str = serial_str.substr(serial_str.length - 50)
+            if (serial_str.includes("No AP")) {
+                return false
+            }
+            if (serial_str.includes("+CWJAP")) {
+                return true
+            }
+            if (input.runningTime() - time > 5000){
+                return false
+            }
         }
     }
 
@@ -272,6 +268,8 @@ namespace ESP8266_IoT {
     //% blockId=initkidiot block="Connect KidsIot with userToken: %userToken Topic: %topic"
     export function connectKidsiot(userToken: string, topic: string): void {
         if (wifi_connected && thingspeak_connected == false) {
+            let serial_str: string = ""
+            serial_str = serial.readString()
             userToken_def = userToken
             topic_def = topic
             sendAT("AT+CIPSTART=\"TCP\",\"139.159.161.57\",5555", 0) // connect to website server
@@ -282,6 +280,7 @@ namespace ESP8266_IoT {
                 while(!waitFeedBack()){
                     basic.pause(500)
                 }
+                serial_str = serial.readString()
                 sendAT(jsonText, 0)
                 kidsiot_connected = waitFeedBack()
             }
