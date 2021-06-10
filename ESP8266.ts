@@ -206,13 +206,13 @@ namespace ESP8266_IoT {
             if (serial_str.length > 50)
                 serial_str = serial_str.substr(serial_str.length - 50)
             if (serial_str.includes("No AP")) {
-                return false
+                return false == state
             }
             if (serial_str.includes("+CWJAP")) {
-                return true
+                return true == state
             }
             if (input.runningTime() - time > 5000){
-                return false
+                return false == state
             }
         }
     }
