@@ -10,7 +10,7 @@ namespace ESP8266_IoT {
     type mess = (t: string, s: string) => void
     let mqttEvt: mess = null
     let mqttlist = [];
-    let mqtthost_def = ""
+    let mqtthost_def = "127.0.0.1"
     let iftttkey_def = ""
     let iftttevent_def = ""
 
@@ -30,6 +30,7 @@ namespace ESP8266_IoT {
             }
         }
         else if (serial_str.includes("MQTTSUBRECV")) {
+            basic.showNumber(1)
             mqttlist = serial_str.split(",", 4)
             mqttEvt(mqttlist[1].slice(1, mqttlist[1].length - 1), mqttlist[3])
         }
@@ -67,12 +68,12 @@ namespace ESP8266_IoT {
                 control.raiseEvent(EventBusSource.MES_BROADCAST_GENERAL_ID, 4)
             }
         }
+        else if (serial_str.includes("Congratu")) {
+            control.raiseEvent(EventBusSource.MES_BROADCAST_GENERAL_ID, 7)
+        }
         else if (serial_str.includes("bytes")) {
             kidsiot_connected = true
             control.raiseEvent(EventBusSource.MES_BROADCAST_GENERAL_ID, 5)
-        }
-        else if (serial_str.includes("Congratulations")) {
-            control.raiseEvent(EventBusSource.MES_BROADCAST_GENERAL_ID, 7)
         }
         else if (serial_str.includes("switchoff")) {
             control.raiseEvent(EventBusSource.MES_BROADCAST_GENERAL_ID, 15)
@@ -332,9 +333,8 @@ namespace ESP8266_IoT {
         let sendST1 = "AT+HTTPCLIENT=3,1,\"http://maker.ifttt.com/trigger/" + iftttevent_def + "/with/key/" + iftttkey_def + "\",,,2,"
         let sendST2 = "\"{\\\"value1\\\":\\\"" + value1 + "\\\"\\\,\\\"value2\\\":\\\"" + value2 + "\\\"\\\,\\\"value3\\\":\\\"" + value3 + "\\\"}\""
         let sendST = sendST1 + sendST2
-        CMD = 0x07
         sendAT(sendST, 1000)
         control.waitForEvent(EventBusSource.MES_BROADCAST_GENERAL_ID, 7)
     }
 
-} 
+}
