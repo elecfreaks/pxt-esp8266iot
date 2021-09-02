@@ -10,7 +10,7 @@ namespace ESP8266_IoT {
     type mess = (t: string, s: string) => void
     let mqttEvt: mess = null
     let mqttlist = [];
-    let mqtthost_def = "127.0.0.1"
+    let mqtthost_def = "ELECFREAKS"
     let iftttkey_def = ""
     let iftttevent_def = ""
 
