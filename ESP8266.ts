@@ -4,9 +4,13 @@ namespace ESP8266_IoT {
     let wifi_connected: boolean = false
     let thingspeak_connected: boolean = false
     let kidsiot_connected: boolean = false
-
+    let MQTT_connected: boolean = false
     let userToken_def: string = ""
     let topic_def: string = ""
+    type mess = (t: string, s: string) => void
+    let mqttEvt: mess = null
+    let mqttlist = [];
+    let mqtthost_def = ""
 
     export enum stateList {
         //% block="on"
@@ -24,6 +28,10 @@ namespace ESP8266_IoT {
                 control.raiseEvent(EventBusSource.MES_BROADCAST_GENERAL_ID, 1)
             }
         }
+        else if (serial_str.includes("MQTTSUBRECV")) {
+            mqttlist = serial_str.split(",", 4)
+            mqttEvt(mqttlist[1].slice(1, mqttlist[1].length - 1), mqttlist[3])
+        }
         else if (serial_str.includes("ERROR")) {
             if (CMD == 0x01) {
                 wifi_connected = false
@@ -37,6 +45,14 @@ namespace ESP8266_IoT {
                 kidsiot_connected = false
                 control.raiseEvent(EventBusSource.MES_BROADCAST_GENERAL_ID, 4)
             }
+            else if (CMD == 0x06) {
+                MQTT_connected = false
+                control.raiseEvent(EventBusSource.MES_BROADCAST_GENERAL_ID, 6)
+            }
+        }
+        else if (serial_str.includes(mqtthost_def)) {
+            MQTT_connected = true
+            control.raiseEvent(EventBusSource.MES_BROADCAST_GENERAL_ID, 6)
         }
         else if (serial_str.includes("CONNECT")) {
             if (CMD == 0x02) {
@@ -57,11 +73,8 @@ namespace ESP8266_IoT {
         else if (serial_str.includes("switchon")) {
             control.raiseEvent(EventBusSource.MES_BROADCAST_GENERAL_ID, 14)
         }
-        else if (serial_str.includes("CLOSE")) {
 
-        }
         else if (serial_str.includes("WIFI DISCONNECT")) {
-            basic.showIcon(IconNames.Heart)
             wifi_connected = false
         }
     })
@@ -98,7 +111,7 @@ namespace ESP8266_IoT {
     //% pw.defl=your_pw weight=95
     export function connectWifi(ssid: string, pw: string) {
         CMD = 0x01
-        sendAT("AT+CWJAP=\"" + ssid + "\",\"" + pw + "\"", 0) // connect to Wifi router
+        sendAT("AT+CWJAP=\"" + ssid + "\",\"" + pw + "\"", 1000) // connect to Wifi router
         control.waitForEvent(EventBusSource.MES_BROADCAST_GENERAL_ID, 1)
     }
     /**
@@ -196,8 +209,8 @@ namespace ESP8266_IoT {
         }
     }
     /**
-* disconnect from kidsiot
-*/
+    * disconnect from kidsiot
+    */
     //% subcategory=KidsIot weight=40
     //% blockId=Disconnect block="Disconnect with kidsiot"
     export function disconnectKidsiot(): void {
@@ -213,6 +226,67 @@ namespace ESP8266_IoT {
     export function iotSwitchEvent(state: stateList, handler: () => void) {
         control.onEvent(EventBusSource.MES_BROADCAST_GENERAL_ID, state, handler)
     }
-    /*----------------------MQTT----------------*/
+    /*----------------------------------MQTT-----------------------*/
+    /**
+    * Set  MQTT client
+    */
+    //% subcategory=MQTT weight=30 
+    //% blockId=initMQTT block="Set MQTT client config|scheme: %scheme clientID: %clientID username: %username password: %password path: %path"
+    export function setMQTT(scheme: number, clientID: string, username: string, password: string, path: string): void {
+        sendAT("AT+MQTTUSERCFG=0," + scheme + ",\"" + clientID + "\",\"" + username + "\",\"" + password + "\"," + 0 + "," + 0 + ",\"" + path + "\"", 1000) // connect to website server
+    }
+    /**
+    * Connect to MQTT broker
+    */
+    //% subcategory=MQTT weight=25
+    //% blockId=connectMQTT block="connect MQTT broker host: %host port: %port reconnect: $reconnect"
+    export function connectMQTT(host: string, port: number, reconnect: boolean): void {
+        CMD = 0x06
+        mqtthost_def = host
+        let rec = 1
+        if (reconnect) {
+            rec = 0
+        }
+        sendAT("AT+MQTTCONN=0,\"" + host + "\"," + port + "," + rec, 5000) // connect to website server
+        control.waitForEvent(EventBusSource.MES_BROADCAST_GENERAL_ID, 6)
+    }
+    /**
+    * subscribe 
+    */
+    //% subcategory=MQTT weight=20
+    //% blockId=subMQTT block="subscribe $topic=variables_get(topic) with Qos: %qos"
+    export function subMQTT(topic: string, qos: number): void {
+        sendAT("AT+MQTTSUB=0,\"" + topic + "\"," + qos, 1000) // connect to website server
+    }
+    /**
+    * unsubscribe 
+    */
+    //% subcategory=MQTT weight=19
+    //% blockId=unsubMQTT block="unsubscribe $topic=variables_get(topic)"
+    export function unsubMQTT(topic: string): void {
+        sendAT("AT+MQTTUNSUB=0,\"" + topic + "\"", 1000) // connect to website server
+    }
+    /**
+    * send message 
+    */
+    //% subcategory=MQTT weight=21
+    //% blockId=sendMQTT block="send %mes to $topic=variables_get(topic) Qos %qos"
+    export function sendmesMQTT(mes: string, topic: string, qos: number): void {
+        sendAT("AT+MQTTPUB=0,\"" + topic + "\",\"" + mes + "\"," + qos + ",0", 1000) // connect to website server
+    }
+    /**
+    * send message 
+    */
+    //% subcategory=MQTT weight=15
+    //% blockId=breakMQTT block="Disconnect from broker"
+    export function breakMQTT(): void {
+        sendAT("AT+MQTTCLEAN=0", 1000) // connect to website server
+    }
 
+    //% block="When $topic have new $message"
+    //% subcategory=MQTT weight=10
+    //% draggableParameters
+    export function MqttEvent(handler: (topic: string, message: string) => void) {
+        mqttEvt = handler
+    }
 }
