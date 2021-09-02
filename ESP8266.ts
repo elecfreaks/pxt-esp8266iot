@@ -11,6 +11,8 @@ namespace ESP8266_IoT {
     let mqttEvt: mess = null
     let mqttlist = [];
     let mqtthost_def = ""
+    let iftttkey_def = ""
+    let iftttevent_def = ""
 
     export enum stateList {
         //% block="on"
@@ -19,7 +21,6 @@ namespace ESP8266_IoT {
         off = 15
     }
     let TStoSendStr = ""
-
     serial.onDataReceived("\n", function () {
         let serial_str = serial.readString()
         if (serial_str.includes("WIFI GOT IP")) {
@@ -49,6 +50,9 @@ namespace ESP8266_IoT {
                 MQTT_connected = false
                 control.raiseEvent(EventBusSource.MES_BROADCAST_GENERAL_ID, 6)
             }
+            else if (CMD == 0x07) {
+                control.raiseEvent(EventBusSource.MES_BROADCAST_GENERAL_ID, 7)
+            }
         }
         else if (serial_str.includes(mqtthost_def)) {
             MQTT_connected = true
@@ -66,6 +70,9 @@ namespace ESP8266_IoT {
         else if (serial_str.includes("bytes")) {
             kidsiot_connected = true
             control.raiseEvent(EventBusSource.MES_BROADCAST_GENERAL_ID, 5)
+        }
+        else if (serial_str.includes("Congratulations")) {
+            control.raiseEvent(EventBusSource.MES_BROADCAST_GENERAL_ID, 7)
         }
         else if (serial_str.includes("switchoff")) {
             control.raiseEvent(EventBusSource.MES_BROADCAST_GENERAL_ID, 15)
@@ -96,8 +103,8 @@ namespace ESP8266_IoT {
     export function initWIFI(tx: SerialPin, rx: SerialPin, baudrate: BaudRate) {
         serial.redirect(tx, rx, BaudRate.BaudRate115200)
         basic.pause(100)
-        serial.setTxBufferSize(64)
-        serial.setRxBufferSize(64)
+        serial.setTxBufferSize(128)
+        serial.setRxBufferSize(128)
         serial.readString()
         sendAT("AT+RESTORE", 2500) // restore to factory settings
         sendAT("ATE0", 1500) // disable echo
@@ -251,6 +258,14 @@ namespace ESP8266_IoT {
         control.waitForEvent(EventBusSource.MES_BROADCAST_GENERAL_ID, 6)
     }
     /**
+    * send message 
+    */
+    //% subcategory=MQTT weight=21
+    //% blockId=sendMQTT block="send %mes to $topic=variables_get(topic) Qos %qos"
+    export function sendmesMQTT(mes: string, topic: string, qos: number): void {
+        sendAT("AT+MQTTPUB=0,\"" + topic + "\",\"" + mes + "\"," + qos + ",0", 1000) // connect to website server
+    }
+    /**
     * subscribe 
     */
     //% subcategory=MQTT weight=20
@@ -266,14 +281,7 @@ namespace ESP8266_IoT {
     export function unsubMQTT(topic: string): void {
         sendAT("AT+MQTTUNSUB=0,\"" + topic + "\"", 1000) // connect to website server
     }
-    /**
-    * send message 
-    */
-    //% subcategory=MQTT weight=21
-    //% blockId=sendMQTT block="send %mes to $topic=variables_get(topic) Qos %qos"
-    export function sendmesMQTT(mes: string, topic: string, qos: number): void {
-        sendAT("AT+MQTTPUB=0,\"" + topic + "\",\"" + mes + "\"," + qos + ",0", 1000) // connect to website server
-    }
+
     /**
     * send message 
     */
@@ -288,5 +296,28 @@ namespace ESP8266_IoT {
     //% draggableParameters
     export function MqttEvent(handler: (topic: string, message: string) => void) {
         mqttEvt = handler
+    }
+    //////////--------------------- IFTTT--------------------/////////
+    /**
+    * set ifttt
+    */
+    //% subcategory=IFTTT weight=9
+    //% blockId=setIFTTT block="set IFTTT key:%key event:%event"
+    export function setIFTTT(key: string, event: string): void {
+        iftttkey_def = key
+        iftttevent_def = event
+    }
+    /**
+    * post ifttt
+    */
+    //% subcategory=IFTTT weight=8
+    //% blockId=postIFTTT block="post IFTTT with|value1:%value value2:%value2 value3:%value3"
+    export function postIFTTT(value1: string, value2: string, value3: string): void {
+        let sendST1 = "AT+HTTPCLIENT=3,1,\"http://maker.ifttt.com/trigger/" + iftttevent_def + "/with/key/" + iftttkey_def + "\",,,2,"
+        let sendST2 = "\"{\\\"value1\\\":\\\"" + value1 + "\\\"\\\,\\\"value2\\\":\\\"" + value2 + "\\\"\\\,\\\"value3\\\":\\\"" + value3 + "\\\"}"
+        let sendST = sendST1 + sendST2
+        CMD = 0x07
+        sendAT(sendST, 1000)
+        control.waitForEvent(EventBusSource.MES_BROADCAST_GENERAL_ID, 7)
     }
 }
