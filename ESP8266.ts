@@ -313,7 +313,7 @@ namespace ESP8266_IoT {
     export function MqttEvent(handler: (topic: string, message: string) => void) {
         mqttEvt = handler
     }
-    //////////--------------------- IFTTT--------------------/////////
+    //////////----------------------------------- IFTTT--------------------------------/////////
     /**
     * set ifttt
     */
@@ -336,4 +336,5 @@ namespace ESP8266_IoT {
         sendAT(sendST, 1000)
         control.waitForEvent(EventBusSource.MES_BROADCAST_GENERAL_ID, 7)
     }
-}
+
+} 
