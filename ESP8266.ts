@@ -4,7 +4,7 @@ namespace ESP8266_IoT {
     let wifi_connected: boolean = false
     let thingspeak_connected: boolean = false
     let kidsiot_connected: boolean = false
-    let MQTT_connected: boolean = false
+    let MQTTbroker_connected: boolean = false
     let userToken_def: string = ""
     let topic_def: string = ""
     type mess = (t: string, s: string) => void
@@ -47,7 +47,7 @@ namespace ESP8266_IoT {
                 control.raiseEvent(EventBusSource.MES_BROADCAST_GENERAL_ID, 4)
             }
             else if (CMD == 0x06) {
-                MQTT_connected = false
+                MQTTbroker_connected = false
                 control.raiseEvent(EventBusSource.MES_BROADCAST_GENERAL_ID, 6)
             }
             else if (CMD == 0x07) {
@@ -55,7 +55,7 @@ namespace ESP8266_IoT {
             }
         }
         else if (serial_str.includes(mqtthost_def)) {
-            MQTT_connected = true
+            MQTTbroker_connected = true
             control.raiseEvent(EventBusSource.MES_BROADCAST_GENERAL_ID, 6)
         }
         else if (serial_str.includes("CONNECT")) {
@@ -227,6 +227,14 @@ namespace ESP8266_IoT {
             sendAT(text_one, 0)
         }
     }
+    /**
+    * Check if ESP8266 successfully connected to KidsIot
+    */
+    //% block="KidsIot connection %State"
+    //% subcategory="KidsIot" weight=35
+    export function kidsiotState(state: boolean) {
+        return kidsiot_connected == state
+    }
     //% block="When switch %vocabulary"
     //% subcategory="KidsIot" weight=30
     //% state.fieldEditor="gridpicker" state.fieldOptions.columns=2
@@ -256,6 +264,14 @@ namespace ESP8266_IoT {
         }
         sendAT("AT+MQTTCONN=0,\"" + host + "\"," + port + "," + rec, 5000) // connect to website server
         control.waitForEvent(EventBusSource.MES_BROADCAST_GENERAL_ID, 6)
+    }
+    /**
+    * Check if ESP8266 successfully connected to mqtt broker
+    */
+    //% block="MQTT broker connection %State"
+    //% subcategory="MQTT" weight=24
+    export function brokerState(state: boolean) {
+        return MQTTbroker_connected == state
     }
     /**
     * send message 
