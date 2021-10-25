@@ -90,7 +90,7 @@ namespace ESP8266_IoT {
     }
 
     /**
-     * Initialize ESP8266 module 
+     * Initialize ESP8266 module
      */
     //% block="set ESP8266|RX %tx|TX %rx|Baud rate %baudrate"
     //% tx.defl=SerialPin.P8
@@ -146,7 +146,7 @@ namespace ESP8266_IoT {
     }
 
     /**
-     * Connect to ThingSpeak and set data. 
+     * Connect to ThingSpeak and set data.
      */
     //% block="set data to send ThingSpeak | Write API key = %write_api_key|Field 1 = %n1||Field 2 = %n2|Field 3 = %n3|Field 4 = %n4|Field 5 = %n5|Field 6 = %n6|Field 7 = %n7|Field 8 = %n8"
     //% write_api_key.defl=your_write_api_key
@@ -273,7 +273,7 @@ namespace ESP8266_IoT {
     /**
      * Set  MQTT client
      */
-    //% subcategory=MQTT weight=30 
+    //% subcategory=MQTT weight=30
     //% blockId=initMQTT block="Set MQTT client config|scheme: %scheme clientID: %clientID username: %username password: %password path: %path"
     export function setMQTT(scheme: SchemeList, clientID: string, username: string, password: string, path: string): void {
         sendAT(`AT+MQTTUSERCFG=0,${scheme},"${clientID}","${username}","${password}",0,0,"${path}"`, 1000)
@@ -306,7 +306,7 @@ namespace ESP8266_IoT {
     }
 
     /**
-     * send message 
+     * send message
      */
     //% subcategory=MQTT weight=21
     //% blockId=sendMQTT block="publish %msg to Topic:%topic with Qos:%qos"
@@ -363,6 +363,7 @@ namespace ESP8266_IoT {
      */
     serial.onDataReceived(serial.delimiters(Delimiters.NewLine), function() {
         recvString += serial.readString()
+        pause(1)
 
         // received kids iot data
         if (recvString.includes("switchoff")) {
