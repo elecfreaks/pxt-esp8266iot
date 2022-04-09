@@ -355,7 +355,7 @@ namespace ESP8266_IoT {
         let sendST2 = "\"{\\\"value1\\\":\\\"" + value1 + "\\\"\\\,\\\"value2\\\":\\\"" + value2 + "\\\"\\\,\\\"value3\\\":\\\"" + value3 + "\\\"}\""
         let sendST = sendST1 + sendST2
         sendAT(sendST, 1000)
-        control.waitForEvent(EspEventSource, EspEventValue.PostIFTTT)
+        //control.waitForEvent(EspEventSource, EspEventValue.PostIFTTT)
     }
 
     /**
