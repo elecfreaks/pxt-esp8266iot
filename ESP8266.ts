@@ -314,6 +314,7 @@ namespace ESP8266_IoT {
     //% topic.defl=topic/1
     export function publishMqttMessage(msg: string, topic: string, qos: QosList): void {
         sendAT(`AT+MQTTPUB=0,"${topic}","${msg}",${qos},0`, 1000)
+        recvString = ""
     }
 
     /**
