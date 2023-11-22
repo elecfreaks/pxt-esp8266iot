@@ -45,6 +45,7 @@ namespace ESP8266_IoT {
     let mqtthost_def = "ELECFREAKS"
     let iftttkey_def = ""
     let iftttevent_def = ""
+    let thingSpeakDatatemp = ""
 
     let recvString = ""
     let currentCmd: Cmd = Cmd.None
@@ -182,6 +183,8 @@ namespace ESP8266_IoT {
     export function uploadData() {
         sendAT(`AT+CIPSEND=${TStoSendStr.length + 2}`, 300)
         sendAT(TStoSendStr, 300) // upload data
+        thingSpeakDatatemp = serial.readString()
+        thingSpeakDatatemp = ""
     }
 
     /**
