@@ -48,6 +48,7 @@ namespace ESP8266_IoT {
     let thingSpeakDatatemp = ""
 
     let recvString = ""
+    let scanWIFIAPFlag = 0
     let currentCmd: Cmd = Cmd.None
 
     const THINGSPEAK_HOST = "api.thingspeak.com"
@@ -91,6 +92,54 @@ namespace ESP8266_IoT {
         basic.pause(3000)
     }
 
+    function scanWIFIAP(ssid: string) {
+
+        let scanflag = 0
+        let mscnt = 0
+        recvString = " "
+        sendAT(`AT+CWLAPOPT=1,2,-100,255`)
+        sendAT(`AT+CWLAP`)
+        while (!(scanflag)) {
+
+            recvString = recvString + serial.readString()
+            basic.pause(1)
+            mscnt += 1
+            if(mscnt >= 3000 ){
+                scanWIFIAPFlag = 0
+                break
+            }
+
+            if (recvString.includes("+CWLAP:(")){
+
+                mscnt = 0
+                recvString = recvString.slice(recvString.indexOf("+CWLAP:("))
+                scanflag = 1
+                while(1) {
+
+                    recvString += serial.readString()
+                    basic.pause(1)
+                    mscnt += 1
+
+                    // OLED.clear()
+                    // OLED.writeStringNewLine(_recvString)
+                    if (recvString.includes("OK") || mscnt >= 3000) {
+                        
+                        if(mscnt >= 3000 ){
+                            scanWIFIAPFlag = 0
+                        } else if (recvString.includes(ssid)){
+                            scanWIFIAPFlag = 1
+                        } else {
+                            scanWIFIAPFlag = 0
+                        }
+                        break
+                    }
+                }
+            } 
+            
+        }
+        recvString = " "
+    }
+
     /**
      * Initialize ESP8266 module
      */
@@ -114,14 +163,29 @@ namespace ESP8266_IoT {
     //% ssid.defl=your_ssid
     //% pw.defl=your_pwd weight=95
     export function connectWifi(ssid: string, pw: string) {
-        currentCmd = Cmd.ConnectWifi
-        sendAT(`AT+CWJAP="${ssid}","${pw}"`) // connect to Wifi router
-        control.waitForEvent(EspEventSource, EspEventValue.ConnectWifi)
-        while (!wifi_connected) {
-            restEsp8266()
-            sendAT(`AT+CWJAP="${ssid}","${pw}"`)
-            control.waitForEvent(EspEventSource, EspEventValue.ConnectWifi)
-        }
+
+        while (1) {
+            scanWIFIAP(ssid)
+            if(scanWIFIAPFlag){
+                currentCmd = Cmd.ConnectWifi
+                sendAT(`AT+CWJAP="${ssid}","${pw}"`) // connect to Wifi router
+                control.waitForEvent(EspEventSource, EspEventValue.ConnectWifi)
+                while (!wifi_connected) {
+                    restEsp8266()
+                    sendAT(`AT+CWJAP="${ssid}","${pw}"`)
+                    control.waitForEvent(EspEventSource, EspEventValue.ConnectWifi)
+                }
+                break
+            } else {
+                restEsp8266()
+                currentCmd = Cmd.ConnectWifi
+                sendAT(`AT+CWJAP="${ssid}","${pw}"`)
+                control.waitForEvent(EspEventSource, EspEventValue.ConnectWifi)
+                if (wifi_connected){
+                    break
+                }
+            }
+        } 
     }
 
     /**
