@@ -47,6 +47,7 @@ namespace ESP8266_IoT {
     let iftttevent_def = ""
     let thingSpeakDatatemp = ""
 
+    let serialCnt = 0
     let recvString = ""
     let scanWIFIAPFlag = 0
     let currentCmd: Cmd = Cmd.None
@@ -207,8 +208,9 @@ namespace ESP8266_IoT {
         currentCmd = Cmd.ConnectThingSpeak
         // connect to server
         sendAT(`AT+CIPSTART="TCP","${THINGSPEAK_HOST}",${THINGSPEAK_PORT}`)
+        serialCnt = 0
+        basic.clearScreen()
         control.waitForEvent(EspEventSource, EspEventValue.ConnectThingSpeak)
-        pause(100)
     }
 
     /**
@@ -245,10 +247,25 @@ namespace ESP8266_IoT {
     //% block="Upload data to ThingSpeak"
     //% subcategory="ThingSpeak" weight=80
     export function uploadData() {
+        let mscnt = 0
         sendAT(`AT+CIPSEND=${TStoSendStr.length + 2}`, 300)
         sendAT(TStoSendStr, 300) // upload data
-        thingSpeakDatatemp = serial.readString()
-        thingSpeakDatatemp = ""
+
+        while (1) {
+
+            recvString += serial.readString()
+            basic.pause(1)
+            mscnt += 1
+
+            // OLED.clear()
+            // OLED.writeStringNewLine(_recvString)
+            if (recvString.includes("OK") || mscnt >= 3000 || recvString.includes("ERROR")) {
+                
+                break
+            }
+        }
+
+        recvString = " "
     }
 
     /**
@@ -433,6 +450,7 @@ namespace ESP8266_IoT {
     serial.onDataReceived(serial.delimiters(Delimiters.NewLine), function() {
         recvString += serial.readString()
         pause(1)
+        serialCnt += 1
 
         // received kids iot data
         if (recvString.includes("switchoff")) {
@@ -469,6 +487,10 @@ namespace ESP8266_IoT {
                         wifi_connected = false
                         recvString = ""
                         control.raiseEvent(EspEventSource, EspEventValue.ConnectWifi)
+                    } else if (serialCnt >= 1000) {
+                        thingspeak_connected = false
+                        recvString = ""
+                        control.raiseEvent(EspEventSource, EspEventValue.ConnectThingSpeak)
                     }
                 }
                 break
@@ -483,7 +505,11 @@ namespace ESP8266_IoT {
                         thingspeak_connected = false
                         recvString = ""
                         control.raiseEvent(EspEventSource, EspEventValue.ConnectThingSpeak)
-                    }
+                    } 
+                } else if (recvString.includes("WIFI GOT IP")) {
+                    thingspeak_connected = false
+                    recvString = ""
+                    control.raiseEvent(EspEventSource, EspEventValue.ConnectThingSpeak)
                 }
                 break
             case Cmd.ConnectKidsIot:
