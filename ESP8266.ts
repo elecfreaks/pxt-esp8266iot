@@ -207,10 +207,18 @@ namespace ESP8266_IoT {
     export function connectThingSpeak() {
         currentCmd = Cmd.ConnectThingSpeak
         // connect to server
-        sendAT(`AT+CIPSTART="TCP","${THINGSPEAK_HOST}",${THINGSPEAK_PORT}`)
+        recvString = " "
         serialCnt = 0
-        basic.clearScreen()
-        control.waitForEvent(EspEventSource, EspEventValue.ConnectThingSpeak)
+        sendAT(`AT+CIPSTART="TCP","${THINGSPEAK_HOST}",${THINGSPEAK_PORT}`)
+        basic.pause(1)
+        recvString += serial.readString()
+        if (recvString == " ") {
+            thingspeak_connected = false
+            //basic.showIcon(IconNames.Sad)
+        } else {
+            control.waitForEvent(EspEventSource, EspEventValue.ConnectThingSpeak)
+            
+        } 
     }
 
     /**
