@@ -205,11 +205,12 @@ namespace ESP8266_IoT {
     //% write_api_key.defl=your_write_api_key
     //% subcategory="ThingSpeak" weight=90
     export function connectThingSpeak() {
-        currentCmd = Cmd.ConnectThingSpeak
+        
         // connect to server
         recvString = " "
         serialCnt = 0
         sendAT(`AT+CIPSTART="TCP","${THINGSPEAK_HOST}",${THINGSPEAK_PORT}`)
+        currentCmd = Cmd.ConnectThingSpeak
         basic.pause(1)
         recvString += serial.readString()
         if (recvString == " ") {
@@ -267,26 +268,27 @@ namespace ESP8266_IoT {
 
             // OLED.clear()
             // OLED.writeStringNewLine(_recvString)
-            if (recvString.includes("OK") || mscnt >= 3000 || recvString.includes("ERROR")) {
+            if (recvString.includes("OK") || mscnt >= 1500 || recvString.includes("FAIL")) {
                 
                 break
             }
         }
 
         recvString = " "
+        basic.pause(200)
     }
 
-    /**
+    /*
      * Check if ESP8266 successfully connected to ThingSpeak
      */
     //% block="ThingSpeak connected %State"
     //% subcategory="ThingSpeak" weight=65
     export function thingSpeakState(state: boolean) {
         return thingspeak_connected === state
-    }
-
-    /*-----------------------------------kidsiot---------------------------------*/
-    /**
+    } 
+      
+    /* ----------------------------------- kidsiot ----------------------------------- */
+    /*
      * Connect to kidsiot
      */
     //% subcategory=KidsIot weight=50
@@ -327,7 +329,7 @@ namespace ESP8266_IoT {
         pause(1500)
     }
 
-    /**
+    /*
      * disconnect from kidsiot
      */
     //% subcategory=KidsIot weight=40
@@ -346,7 +348,7 @@ namespace ESP8266_IoT {
         }
     }
 
-    /**
+    /*
      * Check if ESP8266 successfully connected to KidsIot
      */
     //% block="KidsIot connection %State"
@@ -363,7 +365,7 @@ namespace ESP8266_IoT {
     }
 
     /*----------------------------------MQTT-----------------------*/
-    /**
+    /*
      * Set  MQTT client
      */
     //% subcategory=MQTT weight=30
@@ -372,7 +374,7 @@ namespace ESP8266_IoT {
         sendAT(`AT+MQTTUSERCFG=0,${scheme},"${clientID}","${username}","${password}",0,0,"${path}"`, 1000)
     }
 
-    /**
+    /*
      * Connect to MQTT broker
      */
     //% subcategory=MQTT weight=25
@@ -389,7 +391,7 @@ namespace ESP8266_IoT {
         })
     }
 
-    /**
+    /*
      * Check if ESP8266 successfully connected to mqtt broker
      */
     //% block="MQTT broker is connected"
@@ -398,7 +400,7 @@ namespace ESP8266_IoT {
         return mqttBrokerConnected
     }
 
-    /**
+    /*
      * send message
      */
     //% subcategory=MQTT weight=21
@@ -408,9 +410,9 @@ namespace ESP8266_IoT {
     export function publishMqttMessage(msg: string, topic: string, qos: QosList): void {
         sendAT(`AT+MQTTPUB=0,"${topic}","${msg}",${qos},0`, 1000)
         recvString = ""
-    }
-
-    /**
+    } 
+      
+    /*
      * disconnect MQTT broker
      */
     //% subcategory=MQTT weight=15
@@ -428,8 +430,8 @@ namespace ESP8266_IoT {
         mqttSubscribeQos[topic] = qos
     }
 
-    //////////----------------------------------- IFTTT--------------------------------/////////
-    /**
+    ////////// ----------------------------------- IFTTT ----------------------------------- //////////
+    /*
      * set ifttt
      */
     //% subcategory=IFTTT weight=9
@@ -437,9 +439,9 @@ namespace ESP8266_IoT {
     export function setIFTTT(key: string, event: string): void {
         iftttkey_def = key
         iftttevent_def = event
-    }
+    } 
 
-    /**
+    /*
      * post ifttt
      */
     //% subcategory=IFTTT weight=8
@@ -452,7 +454,7 @@ namespace ESP8266_IoT {
         //control.waitForEvent(EspEventSource, EspEventValue.PostIFTTT)
     }
 
-    /**
+    /*
      * on serial received data
      */
     serial.onDataReceived(serial.delimiters(Delimiters.NewLine), function() {
@@ -495,11 +497,7 @@ namespace ESP8266_IoT {
                         wifi_connected = false
                         recvString = ""
                         control.raiseEvent(EspEventSource, EspEventValue.ConnectWifi)
-                    } else if (serialCnt >= 1000) {
-                        thingspeak_connected = false
-                        recvString = ""
-                        control.raiseEvent(EspEventSource, EspEventValue.ConnectThingSpeak)
-                    }
+                    } 
                 }
                 break
             case Cmd.ConnectThingSpeak:
@@ -518,7 +516,7 @@ namespace ESP8266_IoT {
                     thingspeak_connected = false
                     recvString = ""
                     control.raiseEvent(EspEventSource, EspEventValue.ConnectThingSpeak)
-                }
+                } 
                 break
             case Cmd.ConnectKidsIot:
                 if (recvString.includes(KIDSIOT_HOST)) {
