@@ -205,21 +205,21 @@ namespace ESP8266_IoT {
     //% write_api_key.defl=your_write_api_key
     //% subcategory="ThingSpeak" weight=90
     export function connectThingSpeak() {
-        
+        thingspeak_connected = true
         // connect to server
-        recvString = " "
-        serialCnt = 0
-        sendAT(`AT+CIPSTART="TCP","${THINGSPEAK_HOST}",${THINGSPEAK_PORT}`)
-        currentCmd = Cmd.ConnectThingSpeak
-        basic.pause(1)
-        recvString += serial.readString()
-        if (recvString == " ") {
-            thingspeak_connected = false
-            //basic.showIcon(IconNames.Sad)
-        } else {
-            control.waitForEvent(EspEventSource, EspEventValue.ConnectThingSpeak)
+        // recvString = " "
+        // serialCnt = 0
+        // sendAT(`AT+CIPSTART="TCP","${THINGSPEAK_HOST}",${THINGSPEAK_PORT}`)
+        // currentCmd = Cmd.ConnectThingSpeak
+        // basic.pause(1)
+        // recvString += serial.readString()
+        // if (recvString == " ") {
+        //     thingspeak_connected = false
+        //     //basic.showIcon(IconNames.Sad)
+        // } else {
+        //     control.waitForEvent(EspEventSource, EspEventValue.ConnectThingSpeak)
             
-        } 
+        // } 
     }
 
     /**
@@ -230,7 +230,7 @@ namespace ESP8266_IoT {
     //% expandableArgumentMode="enabled"
     //% subcategory="ThingSpeak" weight=85
     export function setData(write_api_key: string, n1: number = 0, n2: number = 0, n3: number = 0, n4: number = 0, n5: number = 0, n6: number = 0, n7: number = 0, n8: number = 0) {
-        TStoSendStr = "GET /update?api_key="
+        TStoSendStr = "AT+HTTPCLIENT=2,0,\"http://api.thingspeak.com/update?api_key="
             + write_api_key
             + "&field1="
             + n1
@@ -248,6 +248,7 @@ namespace ESP8266_IoT {
             + n7
             + "&field8="
             + n8
+            + "\",,,1"
     }
 
     /**
@@ -257,8 +258,8 @@ namespace ESP8266_IoT {
     //% subcategory="ThingSpeak" weight=80
     export function uploadData() {
         let mscnt = 0
-        sendAT(`AT+CIPSEND=${TStoSendStr.length + 2}`, 300)
-        sendAT(TStoSendStr, 300) // upload data
+        //sendAT(`AT+CIPSEND=${TStoSendStr.length + 2}`, 300)
+        sendAT(TStoSendStr, 100) // upload data
 
         while (1) {
 
@@ -268,7 +269,7 @@ namespace ESP8266_IoT {
 
             // OLED.clear()
             // OLED.writeStringNewLine(_recvString)
-            if (recvString.includes("OK") || mscnt >= 1500 || recvString.includes("FAIL")) {
+            if (recvString.includes("OK") || mscnt >= 3000 || recvString.includes("ERROR")) {
                 
                 break
             }
