@@ -54,12 +54,12 @@ namespace ESP8266_IoT {
 
     const THINGSPEAK_HOST = "api.thingspeak.com"
     const THINGSPEAK_PORT = "80"
-    let SMARTIOT_HOST = "47.239.108.37"
-    let SMARTIOT_PORT = "8081"
-    export function change(a:any,b:any){
-        SMARTIOT_HOST = a
-        SMARTIOT_PORT = b
-    }
+    const SMARTIOT_HOST = "47.239.108.37"
+    const SMARTIOT_PORT = "8081"
+    // export function change(a:any,b:any){
+    //     SMARTIOT_HOST = a
+    //     SMARTIOT_PORT = b
+    // }
 
     const EspEventSource = 3000
     const EspEventValue = {
