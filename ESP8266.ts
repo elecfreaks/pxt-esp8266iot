@@ -4,14 +4,14 @@ namespace ESP8266_IoT {
         None,
         ConnectWifi,
         ConnectThingSpeak,
-        ConnectKidsIot,
-        InitKidsIot,
-        UploadKidsIot,
-        DisconnectKidsIot,
+        ConnectSmartIot,
+        InitSmartIot,
+        UploadSmartIot,
+        DisconnectSmartIot,
         ConnectMqtt,
     }
 
-    export enum KidsIotSwitchState {
+    export enum SmartIotSwitchState {
         //% block="on"
         on = 1,
         //% block="off"
@@ -36,7 +36,7 @@ namespace ESP8266_IoT {
 
     let wifi_connected: boolean = false
     let thingspeak_connected: boolean = false
-    let kidsiot_connected: boolean = false
+    let smartiot_connected: boolean = false
     let mqttBrokerConnected: boolean = false
     let userToken_def: string = ""
     let topic_def: string = ""
@@ -54,25 +54,29 @@ namespace ESP8266_IoT {
 
     const THINGSPEAK_HOST = "api.thingspeak.com"
     const THINGSPEAK_PORT = "80"
-    const KIDSIOT_HOST = "139.159.161.57"
-    const KIDSIOT_PORT = "5555"
+    const SMARTIOT_HOST = "47.239.108.37"
+    const SMARTIOT_PORT = "8081"
+    // export function change(a:any,b:any){
+    //     SMARTIOT_HOST = a
+    //     SMARTIOT_PORT = b
+    // }
 
     const EspEventSource = 3000
     const EspEventValue = {
         None: Cmd.None,
         ConnectWifi: Cmd.ConnectWifi,
         ConnectThingSpeak: Cmd.ConnectThingSpeak,
-        ConnectKidsIot: Cmd.ConnectKidsIot,
-        InitKidsIot: Cmd.InitKidsIot,
-        UploadKidsIot: Cmd.UploadKidsIot,
-        DisconnectKidsIot: Cmd.DisconnectKidsIot,
+        ConnectSmartIot: Cmd.ConnectSmartIot,
+        InitSmartIot: Cmd.InitSmartIot,
+        UploadSmartIot: Cmd.UploadSmartIot,
+        DisconnectSmartIot: Cmd.DisconnectSmartIot,
         ConnectMqtt: Cmd.ConnectMqtt,
         PostIFTTT: 255
     }
-    const KidsIotEventSource = 3100
-    const KidsIotEventValue = {
-        switchOn: KidsIotSwitchState.on,
-        switchOff: KidsIotSwitchState.off
+    const SmartIotEventSource = 3100
+    const SmartIotEventValue = {
+        switchOn: SmartIotSwitchState.on,
+        switchOff: SmartIotSwitchState.off
     }
 
     let TStoSendStr = ""
@@ -288,81 +292,81 @@ namespace ESP8266_IoT {
         return thingspeak_connected === state
     } 
       
-    /* ----------------------------------- kidsiot ----------------------------------- */
+    /* ----------------------------------- smartiot ----------------------------------- */
     /*
-     * Connect to kidsiot
+     * Connect to smartiot
      */
-    //% subcategory=KidsIot weight=50
-    //% blockId=initkidiot block="Connect KidsIot with userToken: %userToken Topic: %topic"
-    export function connectKidsiot(userToken: string, topic: string): void {
+    //% subcategory=SmartIot weight=50
+    //% blockId=initsmartiot block="Connect SmartIot with userToken: %userToken Topic: %topic"
+    export function connectSmartiot(userToken: string, topic: string): void {
         userToken_def = userToken
         topic_def = topic
-        currentCmd = Cmd.ConnectKidsIot
-        sendAT(`AT+CIPSTART="TCP","${KIDSIOT_HOST}",${KIDSIOT_PORT}`)
-        control.waitForEvent(EspEventSource, EspEventValue.ConnectKidsIot)
+        currentCmd = Cmd.ConnectSmartIot
+        sendAT(`AT+CIPSTART="TCP","${SMARTIOT_HOST}",${SMARTIOT_PORT}`)
+        control.waitForEvent(EspEventSource, EspEventValue.ConnectSmartIot)
         pause(100)
         const jsonText = `{"topic":"${topic}","userToken":"${userToken}","op":"init"}`
-        currentCmd = Cmd.InitKidsIot
+        currentCmd = Cmd.InitSmartIot
         sendAT(`AT+CIPSEND=${jsonText.length + 2}`)
-        control.waitForEvent(EspEventSource, EspEventValue.InitKidsIot)
-        if (kidsiot_connected) {
+        control.waitForEvent(EspEventSource, EspEventValue.InitSmartIot)
+        if (smartiot_connected) {
             sendAT(jsonText)
-            control.waitForEvent(EspEventSource, EspEventValue.InitKidsIot)
+            control.waitForEvent(EspEventSource, EspEventValue.InitSmartIot)
         }
         pause(1500)
     }
 
     /**
-     * upload data to kidsiot
+     * upload data to smartiot
      */
-    //% subcategory=KidsIot weight=45
-    //% blockId=uploadkidsiot block="Upload data %data to kidsiot"
-    export function uploadKidsiot(data: number): void {
+    //% subcategory=SmartIot weight=45
+    //% blockId=uploadsmartiot block="Upload data %data to smartiot"
+    export function uploadSmartiot(data: number): void {
         data = Math.floor(data)
         const jsonText = `{"topic":"${topic_def}","userToken":"${userToken_def}","op":"up","data":"${data}"}`
-        currentCmd = Cmd.UploadKidsIot
+        currentCmd = Cmd.UploadSmartIot
         sendAT(`AT+CIPSEND=${jsonText.length + 2}`)
-        control.waitForEvent(EspEventSource, EspEventValue.UploadKidsIot)
-        if (kidsiot_connected) {
+        control.waitForEvent(EspEventSource, EspEventValue.UploadSmartIot)
+        if (smartiot_connected) {
             sendAT(jsonText)
-            control.waitForEvent(EspEventSource, EspEventValue.UploadKidsIot)
+            control.waitForEvent(EspEventSource, EspEventValue.UploadSmartIot)
         }
         pause(1500)
     }
 
     /*
-     * disconnect from kidsiot
+     * disconnect from smartiot
      */
-    //% subcategory=KidsIot weight=40
-    //% blockId=Disconnect block="Disconnect with kidsiot"
-    export function disconnectKidsiot(): void {
-        if (kidsiot_connected) {
+    //% subcategory=SmartIot weight=40
+    //% blockId=Disconnect block="Disconnect with smartiot"
+    export function disconnectSmartiot(): void {
+        if (smartiot_connected) {
             const jsonText = `{"topic":"${topic_def}","userToken":"${userToken_def}","op":"close"}`
-            currentCmd = Cmd.DisconnectKidsIot
+            currentCmd = Cmd.DisconnectSmartIot
             sendAT("AT+CIPSEND=" + (jsonText.length + 2))
-            control.waitForEvent(EspEventSource, EspEventValue.DisconnectKidsIot)
-            if (kidsiot_connected) {
+            control.waitForEvent(EspEventSource, EspEventValue.DisconnectSmartIot)
+            if (smartiot_connected) {
                 sendAT(jsonText)
-                control.waitForEvent(EspEventSource, EspEventValue.DisconnectKidsIot)
+                control.waitForEvent(EspEventSource, EspEventValue.DisconnectSmartIot)
             }
             pause(1500)
         }
     }
 
     /*
-     * Check if ESP8266 successfully connected to KidsIot
+     * Check if ESP8266 successfully connected to SmartIot
      */
-    //% block="KidsIot connection %State"
-    //% subcategory="KidsIot" weight=35
-    export function kidsiotState(state: boolean) {
-        return kidsiot_connected === state
+    //% block="SmartIot connection %State"
+    //% subcategory="SmartIot" weight=35
+    export function smartiotState(state: boolean) {
+        return smartiot_connected === state
     }
 
     //% block="When switch %vocabulary"
-    //% subcategory="KidsIot" weight=30
+    //% subcategory="SmartIot" weight=30
     //% state.fieldEditor="gridpicker" state.fieldOptions.columns=2
-    export function iotSwitchEvent(state: KidsIotSwitchState, handler: () => void) {
-        control.onEvent(KidsIotEventSource, state, handler)
+    export function iotSwitchEvent(state: SmartIotSwitchState, handler: () => void) {
+        control.onEvent(SmartIotEventSource, state, handler)
     }
 
     /*----------------------------------MQTT-----------------------*/
@@ -463,13 +467,13 @@ namespace ESP8266_IoT {
         pause(1)
         serialCnt += 1
 
-        // received kids iot data
+        // received smart iot data
         if (recvString.includes("switchoff")) {
             recvString = ""
-            control.raiseEvent(KidsIotEventSource, KidsIotEventValue.switchOff)
+            control.raiseEvent(SmartIotEventSource, SmartIotEventValue.switchOff)
         } else if (recvString.includes("switchon")) {
             recvString = ""
-            control.raiseEvent(KidsIotEventSource, KidsIotEventValue.switchOn)
+            control.raiseEvent(SmartIotEventSource, SmartIotEventValue.switchOn)
         }
 
         if (recvString.includes("MQTTSUBRECV")) {
@@ -519,89 +523,89 @@ namespace ESP8266_IoT {
                     control.raiseEvent(EspEventSource, EspEventValue.ConnectThingSpeak)
                 } 
                 break
-            case Cmd.ConnectKidsIot:
-                if (recvString.includes(KIDSIOT_HOST)) {
-                    recvString = recvString.slice(recvString.indexOf(KIDSIOT_HOST))
+            case Cmd.ConnectSmartIot:
+                if (recvString.includes(SMARTIOT_HOST)) {
+                    recvString = recvString.slice(recvString.indexOf(SMARTIOT_HOST))
                     if (recvString.includes("CONNECT")) {
-                        kidsiot_connected = true
+                        smartiot_connected = true
                         recvString = ""
-                        control.raiseEvent(EspEventSource, EspEventValue.ConnectKidsIot)
+                        control.raiseEvent(EspEventSource, EspEventValue.ConnectSmartIot)
                     } else if (recvString.includes("ERROR")) {
-                        kidsiot_connected = false
+                        smartiot_connected = false
                         recvString = ""
-                        control.raiseEvent(EspEventSource, EspEventValue.ConnectKidsIot)
+                        control.raiseEvent(EspEventSource, EspEventValue.ConnectSmartIot)
                     }
                 }
                 break
-            case Cmd.InitKidsIot:
+            case Cmd.InitSmartIot:
                 if (recvString.includes("AT+CIPSEND")) {
                     recvString = recvString.slice(recvString.indexOf("AT+CIPSEND"))
                     if (recvString.includes("OK")) {
-                        kidsiot_connected = true
+                        smartiot_connected = true
                         recvString = ""
-                        control.raiseEvent(EspEventSource, EspEventValue.InitKidsIot)
+                        control.raiseEvent(EspEventSource, EspEventValue.InitSmartIot)
                     } else if (recvString.includes("ERROR")) {
-                        kidsiot_connected = false
+                        smartiot_connected = false
                         recvString = ""
-                        control.raiseEvent(EspEventSource, EspEventValue.InitKidsIot)
+                        control.raiseEvent(EspEventSource, EspEventValue.InitSmartIot)
                     }
                 } else {
                     if (recvString.includes("SEND OK")) {
-                        kidsiot_connected = true
+                        smartiot_connected = true
                         recvString = ""
-                        control.raiseEvent(EspEventSource, EspEventValue.InitKidsIot)
+                        control.raiseEvent(EspEventSource, EspEventValue.InitSmartIot)
                     } else if (recvString.includes("ERROR")) {
-                        kidsiot_connected = false
+                        smartiot_connected = false
                         recvString = ""
-                        control.raiseEvent(EspEventSource, EspEventValue.InitKidsIot)
+                        control.raiseEvent(EspEventSource, EspEventValue.InitSmartIot)
                     }
                 }
                 break
-            case Cmd.UploadKidsIot:
+            case Cmd.UploadSmartIot:
                 if (recvString.includes("AT+CIPSEND")) {
                     recvString = recvString.slice(recvString.indexOf("AT+CIPSEND"))
                     if (recvString.includes("OK")) {
-                        kidsiot_connected = true
+                        smartiot_connected = true
                         recvString = ""
-                        control.raiseEvent(EspEventSource, EspEventValue.UploadKidsIot)
+                        control.raiseEvent(EspEventSource, EspEventValue.UploadSmartIot)
                     } else if (recvString.includes("ERROR")) {
-                        kidsiot_connected = false
+                        smartiot_connected = false
                         recvString = ""
-                        control.raiseEvent(EspEventSource, EspEventValue.UploadKidsIot)
+                        control.raiseEvent(EspEventSource, EspEventValue.UploadSmartIot)
                     }
                 } else {
                     if (recvString.includes("SEND OK")) {
-                        kidsiot_connected = true
+                        smartiot_connected = true
                         recvString = ""
-                        control.raiseEvent(EspEventSource, EspEventValue.UploadKidsIot)
+                        control.raiseEvent(EspEventSource, EspEventValue.UploadSmartIot)
                     } else if (recvString.includes("ERROR")) {
-                        kidsiot_connected = false
+                        smartiot_connected = false
                         recvString = ""
-                        control.raiseEvent(EspEventSource, EspEventValue.UploadKidsIot)
+                        control.raiseEvent(EspEventSource, EspEventValue.UploadSmartIot)
                     }
                 }
                 break
-            case Cmd.DisconnectKidsIot:
+            case Cmd.DisconnectSmartIot:
                 if (recvString.includes("AT+CIPSEND")) {
                     recvString = recvString.slice(recvString.indexOf("AT+CIPSEND"))
                     if (recvString.includes("OK")) {
-                        kidsiot_connected = true
+                        smartiot_connected = true
                         recvString = ""
-                        control.raiseEvent(EspEventSource, EspEventValue.DisconnectKidsIot)
+                        control.raiseEvent(EspEventSource, EspEventValue.DisconnectSmartIot)
                     } else if (recvString.includes("ERROR")) {
-                        kidsiot_connected = false
+                        smartiot_connected = false
                         recvString = ""
-                        control.raiseEvent(EspEventSource, EspEventValue.DisconnectKidsIot)
+                        control.raiseEvent(EspEventSource, EspEventValue.DisconnectSmartIot)
                     }
                 } else {
                     if (recvString.includes("SEND OK")) {
-                        kidsiot_connected = false
+                        smartiot_connected = false
                         recvString = ""
-                        control.raiseEvent(EspEventSource, EspEventValue.DisconnectKidsIot)
+                        control.raiseEvent(EspEventSource, EspEventValue.DisconnectSmartIot)
                     } else if (recvString.includes("ERROR")) {
-                        kidsiot_connected = false
+                        smartiot_connected = false
                         recvString = ""
-                        control.raiseEvent(EspEventSource, EspEventValue.DisconnectKidsIot)
+                        control.raiseEvent(EspEventSource, EspEventValue.DisconnectSmartIot)
                     }
                 }
                 break
