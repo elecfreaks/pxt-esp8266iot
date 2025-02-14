@@ -1,14 +1,33 @@
 //% color=#0fbc11 icon="\uf1eb"
 namespace ESP8266_IoT {
 
-    type MsgHandler = { 
-        [key: string]: { 
-            [key: string]: any 
-        } 
+    type MsgHandler = {
+        [key: string]: {
+            [key: string]: any
+        }
     }
 
     let wifi_connected = false;
     const msgHandlerMap: MsgHandler = {};
+
+    /*
+    * on serial received data
+    */
+    function serialDataHandler() {
+        const res = serial.readLine();
+        Object.keys(msgHandlerMap).forEach(key => {
+            if (res.includes(key)) {
+                if (!res.includes(key)) {
+                    return;
+                }
+                if (msgHandlerMap[key].type == 0) {
+                    msgHandlerMap[key].handler(res)
+                } else {
+                    msgHandlerMap[key].msg = res;
+                }
+            }
+        })
+    }
 
     // write AT command with CR+LF ending
     export function sendAT(command: string, wait: number = 0) {
@@ -16,30 +35,35 @@ namespace ESP8266_IoT {
         basic.pause(wait)
     }
 
-    export function registerMsgHandler(key: string, handler: (res: string) => void){
+    export function registerMsgHandler(key: string, handler: (res: string) => void) {
         msgHandlerMap[key] = {
-            handler, 
             type: 0,
+            handler
         }
     }
 
-    export function waitForResponse(key: string, wait: number) :string{
+    export function waitForResponse(key: string, wait: number = 1000): string {
         let timeout = input.runningTime() + wait;
         msgHandlerMap[key] = {
             type: 1,
         }
-        while(timeout > input.runningTime()){
-            if (!msgHandlerMap[key]){
+        while (timeout > input.runningTime()) {
+            if (msgHandlerMap[key] == null || msgHandlerMap[key] == undefined) {
                 return null;
-            } else if (msgHandlerMap[key].msg){
+            } else if (msgHandlerMap[key].msg) {
                 let res = msgHandlerMap[key].msg
                 delete msgHandlerMap[key]
                 return res
             }
-            basic.pause(1);
+            basic.pause(5);
         }
         delete msgHandlerMap[key]
         return null;
+    }
+
+    export function sendRequest(command: string, key: string, wait: number = 1000): string {
+        serial.writeString(`${command}\u000D\u000A`)
+        return waitForResponse(key, wait)
     }
 
     /**
@@ -52,16 +76,14 @@ namespace ESP8266_IoT {
     //% pw.defl=your_password weight=100
     export function initWIFI(tx: SerialPin, rx: SerialPin, baudrate: BaudRate) {
         serial.redirect(tx, rx, BaudRate.BaudRate115200)
-        basic.pause(100)
         serial.setTxBufferSize(128)
         serial.setRxBufferSize(128)
         serial.onDataReceived(serial.delimiters(Delimiters.NewLine), serialDataHandler)
-        sendAT("AT+RESTORE", 1000) // restore to factory settings
-        sendAT("AT+RST", 1000) // rest
-        sendAT("AT+CWMODE=1", 500) // set to STA mode
-        sendAT("AT+SYSTIMESTAMP=1634953609130", 100) // Set local timestamp.
-        sendAT(`AT+CIPSNTPCFG=1,8,"ntp1.aliyun.com","0.pool.ntp.org","time.google.com"`, 100)
-        waitForResponse("AT+CIPSNTPCFG", 10000);
+        sendRequest("AT+RESTORE", "ready") // restore to factory settings
+        sendRequest("AT+RST", "ready") // rest
+        sendRequest("AT+CWMODE=1", "OK") // set to STA mode
+        sendRequest("AT+SYSTIMESTAMP=1634953609130", "OK") // Set local timestamp.
+        sendRequest(`AT+CIPSNTPCFG=1,8,"ntp1.aliyun.com","0.pool.ntp.org","time.google.com"`, "AT+CIPSNTPCFG");
     }
 
     /**
@@ -71,12 +93,14 @@ namespace ESP8266_IoT {
     //% ssid.defl=your_ssid
     //% pw.defl=your_pwd weight=95
     export function connectWifi(ssid: string, pw: string) {
-        sendAT(`AT+CWJAP="${ssid}","${pw}"`) // connect to Wifi router
         registerMsgHandler("WIFI DISCONNECT", () => wifi_connected = false)
         registerMsgHandler("WIFI GOT IP", () => wifi_connected = true)
-        let timeout = input.runningTime() + 5000;
-        while (!wifi_connected && timeout > input.runningTime()){
-            basic.pause(5);
+        for (let i = 0; i < 3 && wifi_connected == false; i++) {
+            sendAT(`AT+CWJAP="${ssid}","${pw}"`) // connect to Wifi router
+            let timeout = input.runningTime() + 5000;
+            while (!wifi_connected && timeout > input.runningTime()) {
+                basic.pause(5);
+            }
         }
     }
 
@@ -89,71 +113,51 @@ namespace ESP8266_IoT {
         return wifi_connected === state
     }
 
-    /*
-     * on serial received data
-     */
-    let log = ""
-    export function getLog():string{
-        return log;
-    }
-    function serialDataHandler(){
-        const res = serial.readLine();
-        log+=res;
-        Object.keys(msgHandlerMap).forEach(key => {
-            if (!res.includes(key)){
-                return;
-            }
-            if (msgHandlerMap[key].type == 0){
-                msgHandlerMap[key].handler(key)
-            }else {
-                msgHandlerMap[key].msg = res;
-            }
-        })
-    }
+
 
     // serial.onDataReceived(serial.delimiters(Delimiters.NewLine), function() {
-        // recvString += serial.readString()
-        // pause(1)
+    // recvString += serial.readString()
+    // pause(1)
 
-        // if (recvString.includes("MQTTSUBRECV")) {
-        //     recvString = recvString.slice(recvString.indexOf("MQTTSUBRECV"))
-        //     const recvStringSplit = recvString.split(",", 4)
-        //     const topic = recvStringSplit[1].slice(1, -1)
-        //     const message = recvStringSplit[3].slice(0, -2)
-        //     mqttSubscribeHandlers[topic] && mqttSubscribeHandlers[topic](message)
-        //     recvString = ""
-        // }
+    // if (recvString.includes("MQTTSUBRECV")) {
+    //     recvString = recvString.slice(recvString.indexOf("MQTTSUBRECV"))
+    //     const recvStringSplit = recvString.split(",", 4)
+    //     const topic = recvStringSplit[1].slice(1, -1)
+    //     const message = recvStringSplit[3].slice(0, -2)
+    //     mqttSubscribeHandlers[topic] && mqttSubscribeHandlers[topic](message)
+    //     recvString = ""
+    // }
 
-        // switch (currentCmd) {
-        //     case Cmd.ConnectWifi:
-        //         if (recvString.includes("AT+CWJAP")) {
-        //             recvString = recvString.slice(recvString.indexOf("AT+CWJAP"))
-        //             if (recvString.includes("WIFI GOT IP")) {
-        //                 wifi_connected = true
-        //                 recvString = ""
-        //                 control.raiseEvent(EspEventSource, EspEventValue.ConnectWifi)
-        //             } else if (recvString.includes("ERROR")) {
-        //                 wifi_connected = false
-        //                 recvString = ""
-        //                 control.raiseEvent(EspEventSource, EspEventValue.ConnectWifi)
-        //             } 
-        //         }
-        //         break
-        //     case Cmd.ConnectMqtt:
-        //         if (recvString.includes(mqtthost_def)) {
-        //             recvString = recvString.slice(recvString.indexOf(mqtthost_def))
-        //             if (recvString.includes("OK")) {
-        //                 mqttBrokerConnected = true
-        //                 recvString = ""
-        //                 control.raiseEvent(EspEventSource, EspEventValue.ConnectMqtt)
-        //             } else if (recvString.includes("ERROR")) {
-        //                 mqttBrokerConnected = false
-        //                 recvString = ""
-        //                 control.raiseEvent(EspEventSource, EspEventValue.ConnectMqtt)
-        //             }
-        //         }
-        //         break
-        // }
+    // switch (currentCmd) {
+    //     case Cmd.ConnectWifi:
+    //         if (recvString.includes("AT+CWJAP")) {
+    //             recvString = recvString.slice(recvString.indexOf("AT+CWJAP"))
+    //             if (recvString.includes("WIFI GOT IP")) {
+    //                 wifi_connected = true
+    //                 recvString = ""
+    //                 control.raiseEvent(EspEventSource, EspEventValue.ConnectWifi)
+    //             } else if (recvString.includes("ERROR")) {
+    //                 wifi_connected = false
+    //                 recvString = ""
+    //                 control.raiseEvent(EspEventSource, EspEventValue.ConnectWifi)
+    //             } 
+    //         }
+    //         break
+    //     case Cmd.ConnectMqtt:
+    //         if (recvString.includes(mqtthost_def)) {
+    //             recvString = recvString.slice(recvString.indexOf(mqtthost_def))
+    //             if (recvString.includes("OK")) {
+    //                 mqttBrokerConnected = true
+    //                 recvString = ""
+    //                 control.raiseEvent(EspEventSource, EspEventValue.ConnectMqtt)
+    //             } else if (recvString.includes("ERROR")) {
+    //                 mqttBrokerConnected = false
+    //                 recvString = ""
+    //                 control.raiseEvent(EspEventSource, EspEventValue.ConnectMqtt)
+    //             }
+    //         }
+    //         break
+    // }
     // })
 }
 /************************************************************************
@@ -253,79 +257,6 @@ namespace ESP8266_IoT {
 }
 
 /************************************************************************
- * smart_iot
- ************************************************************************/
-namespace ESP8266_IoT {
-
-    export enum SmartIotSwitchState {
-        //% block="on"
-        on = 1,
-        //% block="off"
-        off = 2
-    }
-
-    let SMARTIOT_HOST = "47.239.108.37"
-    let SMARTIOT_PORT = "8081"
-    let smartiot_connected: boolean = false
-
-    const SmartIotEventSource = 3100
-    const SmartIotEventValue = {
-        switchOn: SmartIotSwitchState.on,
-        switchOff: SmartIotSwitchState.off
-    }
-
-    export function setSmartIotAddr(host: any, port: any) {
-        SMARTIOT_HOST = host
-        SMARTIOT_PORT = port
-    }
-
-    /* ----------------------------------- smartiot ----------------------------------- */
-    /*
-     * Connect to smartiot
-     */
-    //% subcategory=SmartIot weight=50
-    //% blockId=initsmartiot block="Connect SmartIot with userToken: %userToken Topic: %topic"
-    export function connectSmartiot(userToken: string, topic: string): void {
-
-    }
-
-    /**
-     * upload data to smartiot
-     */
-    //% subcategory=SmartIot weight=45
-    //% blockId=uploadsmartiot block="Upload data %data to smartiot"
-    export function uploadSmartiot(data: number): void {
-
-    }
-
-    /*
-     * disconnect from smartiot
-     */
-    //% subcategory=SmartIot weight=40
-    //% blockId=Disconnect block="Disconnect with smartiot"
-    export function disconnectSmartiot(): void {
-
-    }
-
-    /*
-     * Check if ESP8266 successfully connected to SmartIot
-     */
-    //% block="SmartIot connection %State"
-    //% subcategory="SmartIot" weight=35
-    export function smartiotState(state: boolean) {
-        return false;
-    }
-
-    //% block="When switch %vocabulary"
-    //% subcategory="SmartIot" weight=30
-    //% state.fieldEditor="gridpicker" state.fieldOptions.columns=2
-    export function iotSwitchEvent(state: SmartIotSwitchState, handler: () => void) {
-
-    }
-
-}
-
-/************************************************************************
  * thingspeak
  ************************************************************************/
 namespace ESP8266_IoT {
@@ -407,6 +338,130 @@ namespace ESP8266_IoT {
     //% subcategory="ThingSpeak" weight=65
     export function thingSpeakState(state: boolean) {
         return thingspeak_connected === state
+    }
+
+}
+
+
+/************************************************************************
+ * smart_iot
+ ************************************************************************/
+namespace ESP8266_IoT {
+
+    export enum SmartIotSwitchState {
+        //% block="on"
+        on = 1,
+        //% block="off"
+        off = 2
+    }
+
+    let smartiot_connected: boolean = true
+    let smartiot_sendMsg: string = ""
+    let smartiot_lastSendTime = 0
+    let smartiot_switchListenFlag = false
+    let smartiot_switchOnHandler = null
+    let smartiot_switchOffHandler = null
+    let smartiot_switchStatus = null
+    let smartiot_host = "47.239.108.37"
+    let smartiot_port = "8081"
+    let smartiot_token = ""
+    let smartiot_topic = ""
+
+    const SmartIotEventSource = 3100
+    const SmartIotEventValue = {
+        switchOn: SmartIotSwitchState.on,
+        switchOff: SmartIotSwitchState.off
+    }
+
+    export function setSmartIotAddr(host: any, port: any) {
+        smartiot_host = host
+        smartiot_port = port
+    }
+
+    /* ----------------------------------- smartiot ----------------------------------- */
+    /*
+     * Connect to smartiot
+     */
+    //% subcategory=SmartIot weight=50
+    //% blockId=initsmartiot block="Connect SmartIot with userToken: %userToken topic: %topic"
+    export function connectSmartiot(userToken: string, topic: string): void {
+        smartiot_token = userToken
+        smartiot_topic = topic
+    }
+
+    /**
+     * upload data to smartiot
+     */
+    //% subcategory=SmartIot weight=48
+    //% blockId=setSmartIotUploadData block="set data to send SmartIot |Data 1 = %n1||Data 2 = %n2|Data 3 = %n3|Data 4 = %n4|Data 5 = %n5|Data 6 = %n6|Data 7 = %n7|Data 8 = %n8"
+    export function setSmartIotUploadData(
+        n1: number = 0,
+        n2: number = 0,
+        n3: number = 0,
+        n4: number = 0,
+        n5: number = 0,
+        n6: number = 0,
+        n7: number = 0,
+        n8: number = 0
+    ): void {
+        smartiot_sendMsg = `AT+HTTPCLIENT=2,0,\"${smartiot_host}:${smartiot_port}`
+            + `/api/iot/iotTopicData/addTopicData?userToken=${smartiot_token}&topicName=${smartiot_topic}`
+            + "&data1="
+            + n1
+            + "&data2="
+            + n2
+            + "&data3="
+            + n3
+            + "&data4="
+            + n4
+            + "&data5="
+            + n5
+            + "&data6="
+            + n6
+            + "&data7="
+            + n7
+            + "&data8="
+            + n8
+            + "\",,,1"
+    }
+
+    /**
+     * upload data to smartiot
+     */
+    //% subcategory=SmartIot weight=45
+    //% blockId=uploadSmartIotData block="Upload data %data to smartiot"
+    export function uploadSmartIotData(): void {
+
+        basic.pause(smartiot_lastSendTime + 1000 - input.runningTime())
+        sendAT(smartiot_sendMsg)
+        smartiot_lastSendTime = input.runningTime();
+    }
+
+    /*
+     * Check if ESP8266 successfully connected to SmartIot
+     */
+    //% block="SmartIot connection %State"
+    //% subcategory="SmartIot" weight=35
+    export function smartiotState(state: boolean) {
+        return smartiot_connected == state;
+    }
+
+    //% block="When switch %vocabulary"
+    //% subcategory="SmartIot" weight=30
+    //% state.fieldEditor="gridpicker" state.fieldOptions.columns=2
+    export function iotSwitchEvent(state: SmartIotSwitchState, handler: () => void) {
+        if (state == SmartIotSwitchState.on) {
+            smartiot_switchOnHandler = handler
+        } else {
+            smartiot_switchOffHandler = handler
+        }
+
+        if (!smartiot_switchListenFlag) {
+            basic.forever(() => {
+                //TODO send switch request
+            })
+            smartiot_switchListenFlag = true
+        }
     }
 
 }
