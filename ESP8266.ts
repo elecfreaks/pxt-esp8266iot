@@ -42,6 +42,10 @@ namespace ESP8266_IoT {
         }
     }
 
+    export function removeMsgHandler(key: string) {
+        delete msgHandlerMap[key]
+    }
+
     export function waitForResponse(key: string, wait: number = 1000): string {
         let timeout = input.runningTime() + wait;
         msgHandlerMap[key] = {
@@ -113,52 +117,6 @@ namespace ESP8266_IoT {
         return wifi_connected === state
     }
 
-
-
-    // serial.onDataReceived(serial.delimiters(Delimiters.NewLine), function() {
-    // recvString += serial.readString()
-    // pause(1)
-
-    // if (recvString.includes("MQTTSUBRECV")) {
-    //     recvString = recvString.slice(recvString.indexOf("MQTTSUBRECV"))
-    //     const recvStringSplit = recvString.split(",", 4)
-    //     const topic = recvStringSplit[1].slice(1, -1)
-    //     const message = recvStringSplit[3].slice(0, -2)
-    //     mqttSubscribeHandlers[topic] && mqttSubscribeHandlers[topic](message)
-    //     recvString = ""
-    // }
-
-    // switch (currentCmd) {
-    //     case Cmd.ConnectWifi:
-    //         if (recvString.includes("AT+CWJAP")) {
-    //             recvString = recvString.slice(recvString.indexOf("AT+CWJAP"))
-    //             if (recvString.includes("WIFI GOT IP")) {
-    //                 wifi_connected = true
-    //                 recvString = ""
-    //                 control.raiseEvent(EspEventSource, EspEventValue.ConnectWifi)
-    //             } else if (recvString.includes("ERROR")) {
-    //                 wifi_connected = false
-    //                 recvString = ""
-    //                 control.raiseEvent(EspEventSource, EspEventValue.ConnectWifi)
-    //             } 
-    //         }
-    //         break
-    //     case Cmd.ConnectMqtt:
-    //         if (recvString.includes(mqtthost_def)) {
-    //             recvString = recvString.slice(recvString.indexOf(mqtthost_def))
-    //             if (recvString.includes("OK")) {
-    //                 mqttBrokerConnected = true
-    //                 recvString = ""
-    //                 control.raiseEvent(EspEventSource, EspEventValue.ConnectMqtt)
-    //             } else if (recvString.includes("ERROR")) {
-    //                 mqttBrokerConnected = false
-    //                 recvString = ""
-    //                 control.raiseEvent(EspEventSource, EspEventValue.ConnectMqtt)
-    //             }
-    //         }
-    //         break
-    // }
-    // })
 }
 /************************************************************************
  * MQTT
@@ -181,12 +139,9 @@ namespace ESP8266_IoT {
         Qos2
     }
 
-    let mqttBrokerConnected: boolean = false
-    let userToken_def: string = ""
-    let topic_def: string = ""
-    const mqttSubscribeHandlers: { [topic: string]: (message: string) => void } = {}
-    const mqttSubscribeQos: { [topic: string]: number } = {}
-    let mqtthost_def = "ELECFREAKS"
+    let mqtt_connected: boolean = false
+    const mqtt_subHandlers: { [topic: string]: (message: string) => void } = {}
+    const mqtt_subQos: { [topic: string]: number } = {}
 
 
     /*----------------------------------MQTT-----------------------*/
@@ -205,15 +160,20 @@ namespace ESP8266_IoT {
     //% subcategory=MQTT weight=25
     //% blockId=connectMQTT block="connect MQTT broker host: %host port: %port reconnect: $reconnect"
     export function connectMQTT(host: string, port: number, reconnect: boolean): void {
-        // mqtthost_def = host
-        // const rec = reconnect ? 0 : 1
-        // currentCmd = Cmd.ConnectMqtt
-        // sendAT(`AT+MQTTCONN=0,"${host}",${port},${rec}`)
-        // control.waitForEvent(EspEventSource, EspEventValue.ConnectMqtt)
-        // Object.keys(mqttSubscribeQos).forEach(topic => {
-        //     const qos = mqttSubscribeQos[topic]
-        //     sendAT(`AT+MQTTSUB=0,"${topic}",${qos}`, 1000)
-        // })
+        let res = sendRequest(`AT+MQTTCONN=0,"${host}",${port},${reconnect ? 0 : 1}`, host, 3000)
+        if (res != null && res.includes("OK")) {
+            mqtt_connected = true
+            Object.keys(mqtt_subQos).forEach(topic => {
+                const qos = mqtt_subQos[topic]
+                sendAT(`AT+MQTTSUB=0,"${topic}",${qos}`, 1000)
+            })
+            registerMsgHandler("MQTTSUBRECV", (res) => {
+                const recvStringSplit = res.split(",", 4)
+                const topic = recvStringSplit[1].slice(1, -1)
+                const message = recvStringSplit[3].slice(0, -2)
+                mqtt_subHandlers[topic] && mqtt_subHandlers[topic](message)
+            })
+        }
     }
 
     /*
@@ -222,7 +182,7 @@ namespace ESP8266_IoT {
     //% block="MQTT broker is connected"
     //% subcategory="MQTT" weight=24
     export function isMqttBrokerConnected() {
-        return mqttBrokerConnected
+        return mqtt_connected
     }
 
     /*
@@ -242,7 +202,8 @@ namespace ESP8266_IoT {
     //% subcategory=MQTT weight=15
     //% blockId=breakMQTT block="Disconnect from broker"
     export function breakMQTT(): void {
-        sendAT("AT+MQTTCLEAN=0", 1000)
+        removeMsgHandler("MQTTSUBRECV")
+        sendAT("AT+MQTTCLEAN=0", 500)
     }
 
     //% block="when Topic: %topic have new $message with Qos: %qos"
@@ -250,8 +211,8 @@ namespace ESP8266_IoT {
     //% draggableParameters
     //% topic.defl=topic/1
     export function MqttEvent(topic: string, qos: QosList, handler: (message: string) => void) {
-        mqttSubscribeHandlers[topic] = handler
-        mqttSubscribeQos[topic] = qos
+        mqtt_subHandlers[topic] = handler
+        mqtt_subQos[topic] = qos
     }
 
 }
@@ -266,8 +227,6 @@ namespace ESP8266_IoT {
 
     let thingspeak_connected: boolean = false
     let thingSpeakDatatemp = ""
-
-
 
     /**
      * Connect to ThingSpeak
@@ -314,20 +273,7 @@ namespace ESP8266_IoT {
     //% block="Upload data to ThingSpeak"
     //% subcategory="ThingSpeak" weight=80
     export function uploadData() {
-        let mscnt = 0
-        sendAT(thingSpeakDatatemp, 100) // upload data
-        let recvString = ""
-        while (1) {
-
-            recvString += serial.readString()
-            basic.pause(1)
-            mscnt += 1
-            if (recvString.includes("OK") || mscnt >= 3000 || recvString.includes("ERROR")) {
-                break
-            }
-        }
-
-        recvString = " "
+        sendRequest(thingSpeakDatatemp, "http", 2000)
         basic.pause(200)
     }
 
@@ -357,15 +303,15 @@ namespace ESP8266_IoT {
 
     let smartiot_connected: boolean = true
     let smartiot_sendMsg: string = ""
-    let smartiot_lastSendTime = 0
-    let smartiot_switchListenFlag = false
-    let smartiot_switchOnHandler = null
-    let smartiot_switchOffHandler = null
-    let smartiot_switchStatus = null
-    let smartiot_host = "47.239.108.37"
-    let smartiot_port = "8081"
-    let smartiot_token = ""
-    let smartiot_topic = ""
+    let smartiot_lastSendTime: number = 0
+    let smartiot_switchListenFlag: boolean = false
+    let smartiot_switchOnHandler: () => void = null
+    let smartiot_switchOffHandler: () => void = null
+    let smartiot_switchStatus: boolean = false
+    let smartiot_host: string = "https://www.smartiot.space"
+    let smartiot_port: string = "443"
+    let smartiot_token: string = ""
+    let smartiot_topic: string = ""
 
     const SmartIotEventSource = 3100
     const SmartIotEventValue = {
@@ -378,6 +324,10 @@ namespace ESP8266_IoT {
         smartiot_port = port
     }
 
+    function concatReqMsg(queryString: string): string {
+        return `AT+HTTPCLIENT=2,0,\"${smartiot_host}:${smartiot_port}${queryString}\",,,1`;
+    }
+
     /* ----------------------------------- smartiot ----------------------------------- */
     /*
      * Connect to smartiot
@@ -387,6 +337,14 @@ namespace ESP8266_IoT {
     export function connectSmartiot(userToken: string, topic: string): void {
         smartiot_token = userToken
         smartiot_topic = topic
+        let ret = sendRequest(concatReqMsg(`/api/iot/iotTopic/getTopicStatus/${userToken}/${topic}`), '"code":200');
+        if (ret != null) {
+            smartiot_connected = true
+            if (ret.includes('"data":1')) {
+                smartiot_switchStatus = true
+            }
+        }
+        smartiot_connected = (ret != null)
     }
 
     /**
@@ -404,25 +362,17 @@ namespace ESP8266_IoT {
         n7: number = 0,
         n8: number = 0
     ): void {
-        smartiot_sendMsg = `AT+HTTPCLIENT=2,0,\"${smartiot_host}:${smartiot_port}`
-            + `/api/iot/iotTopicData/addTopicData?userToken=${smartiot_token}&topicName=${smartiot_topic}`
-            + "&data1="
-            + n1
-            + "&data2="
-            + n2
-            + "&data3="
-            + n3
-            + "&data4="
-            + n4
-            + "&data5="
-            + n5
-            + "&data6="
-            + n6
-            + "&data7="
-            + n7
-            + "&data8="
-            + n8
-            + "\",,,1"
+        smartiot_sendMsg = concatReqMsg(
+            `/api/iot/iotTopicData/addTopicData?userToken=${smartiot_token}&topicName=${smartiot_topic}`
+            + "&data1=" + n1
+            + "&data2=" + n2
+            + "&data3=" + n3
+            + "&data4=" + n4
+            + "&data5=" + n5
+            + "&data6=" + n6
+            + "&data7=" + n7
+            + "&data8=" + n8
+        )
     }
 
     /**
@@ -431,7 +381,6 @@ namespace ESP8266_IoT {
     //% subcategory=SmartIot weight=45
     //% blockId=uploadSmartIotData block="Upload data %data to smartiot"
     export function uploadSmartIotData(): void {
-
         basic.pause(smartiot_lastSendTime + 1000 - input.runningTime())
         sendAT(smartiot_sendMsg)
         smartiot_lastSendTime = input.runningTime();
@@ -458,7 +407,23 @@ namespace ESP8266_IoT {
 
         if (!smartiot_switchListenFlag) {
             basic.forever(() => {
-                //TODO send switch request
+                if (!smartiot_connected) {
+                    basic.pause(500)
+                    return
+                }
+                let ret = sendRequest(concatReqMsg(`/api/iot/iotTopic/getTopicStatus/${smartiot_token}/${smartiot_topic}`), '"code":200');
+                if (ret != null) {
+                    let newStatus = ret.includes('"data":1')
+                    if (smartiot_switchStatus != newStatus) {
+                        if (newStatus) {
+                            smartiot_switchOnHandler && smartiot_switchOnHandler()
+                        } else {
+                            smartiot_switchOffHandler && smartiot_switchOffHandler()
+                        }
+                    }
+                    smartiot_switchStatus = newStatus
+                }
+                basic.pause(1500)
             })
             smartiot_switchListenFlag = true
         }
