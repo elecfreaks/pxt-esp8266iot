@@ -166,7 +166,7 @@ namespace ESP8266_IoT {
         registerMsgHandler("MQTTSUBRECV", (res) => {
             const recvStringSplit = res.split(",", 4)
             const topic = recvStringSplit[1].slice(1, -1)
-            const message = recvStringSplit[3].slice(0, -2)
+            const message = recvStringSplit[3].slice(0, -1)
             mqtt_subHandlers[topic] && mqtt_subHandlers[topic](message)
         })
         let retryCount = 3;
