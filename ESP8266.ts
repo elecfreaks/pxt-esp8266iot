@@ -210,6 +210,8 @@ namespace ESP8266_IoT {
     //% blockId=breakMQTT block="Disconnect from broker"
     export function breakMQTT(): void {
         removeMsgHandler("MQTTSUBRECV")
+        removeMsgHandler("+MQTTDISCONNECTED")
+        removeMsgHandler("+MQTTCONNECTED")
         sendAT("AT+MQTTCLEAN=0", 500)
     }
 
