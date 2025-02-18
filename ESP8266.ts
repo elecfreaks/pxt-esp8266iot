@@ -99,13 +99,14 @@ namespace ESP8266_IoT {
     export function connectWifi(ssid: string, pw: string) {
         registerMsgHandler("WIFI DISCONNECT", () => wifi_connected = false)
         registerMsgHandler("WIFI GOT IP", () => wifi_connected = true)
-        for (let i = 0; i < 3 && wifi_connected == false; i++) {
+        let retryCount = 3;
+        do{
             sendAT(`AT+CWJAP="${ssid}","${pw}"`) // connect to Wifi router
-            let timeout = input.runningTime() + 5000;
+            let timeout = input.runningTime() + 3500;
             while (!wifi_connected && timeout > input.runningTime()) {
                 basic.pause(5);
             }
-        }
+        } while (wifi_connected == false && --retryCount > 0);
     }
 
     /**
@@ -160,20 +161,26 @@ namespace ESP8266_IoT {
     //% subcategory=MQTT weight=25
     //% blockId=connectMQTT block="connect MQTT broker host: %host port: %port reconnect: $reconnect"
     export function connectMQTT(host: string, port: number, reconnect: boolean): void {
-        let res = sendRequest(`AT+MQTTCONN=0,"${host}",${port},${reconnect ? 0 : 1}`, host, 3000)
-        if (res != null && res.includes("OK")) {
-            mqtt_connected = true
-            Object.keys(mqtt_subQos).forEach(topic => {
-                const qos = mqtt_subQos[topic]
-                sendAT(`AT+MQTTSUB=0,"${topic}",${qos}`, 1000)
-            })
-            registerMsgHandler("MQTTSUBRECV", (res) => {
-                const recvStringSplit = res.split(",", 4)
-                const topic = recvStringSplit[1].slice(1, -1)
-                const message = recvStringSplit[3].slice(0, -2)
-                mqtt_subHandlers[topic] && mqtt_subHandlers[topic](message)
-            })
-        }
+        registerMsgHandler("+MQTTDISCONNECTED", () => mqtt_connected = false)
+        registerMsgHandler("+MQTTCONNECTED", () => mqtt_connected = true)
+        registerMsgHandler("MQTTSUBRECV", (res) => {
+            const recvStringSplit = res.split(",", 4)
+            const topic = recvStringSplit[1].slice(1, -1)
+            const message = recvStringSplit[3].slice(0, -2)
+            mqtt_subHandlers[topic] && mqtt_subHandlers[topic](message)
+        })
+        let retryCount = 3;
+        do {
+            sendAT(`AT+MQTTCONN=0,"${host}",${port},${reconnect ? 0 : 1}`)
+            let timeout = input.runningTime() + 3500;
+            while (!mqtt_connected && timeout > input.runningTime()) {
+                basic.pause(5);
+            }
+        } while (mqtt_connected == false && --retryCount > 0);
+        Object.keys(mqtt_subQos).forEach(topic => {
+            const qos = mqtt_subQos[topic]
+            sendAT(`AT+MQTTSUB=0,"${topic}",${qos}`, 1000)
+        })
     }
 
     /*
