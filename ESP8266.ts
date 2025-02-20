@@ -100,13 +100,18 @@ namespace ESP8266_IoT {
         registerMsgHandler("WIFI DISCONNECT", () => wifi_connected = false)
         registerMsgHandler("WIFI GOT IP", () => wifi_connected = true)
         let retryCount = 3;
-        do{
+        while (true){
             sendAT(`AT+CWJAP="${ssid}","${pw}"`) // connect to Wifi router
             let timeout = input.runningTime() + 3500;
             while (!wifi_connected && timeout > input.runningTime()) {
                 basic.pause(5);
             }
-        } while (wifi_connected == false && --retryCount > 0);
+            if(wifi_connected == false && --retryCount > 0) {
+                initWIFI();
+            }else {
+                break;
+            }
+        };
     }
 
     /**
@@ -346,14 +351,18 @@ namespace ESP8266_IoT {
     export function connectSmartiot(userToken: string, topic: string): void {
         smartiot_token = userToken
         smartiot_topic = topic
-        let ret = sendRequest(concatReqMsg(`/api/iot/iotTopic/getTopicStatus/${userToken}/${topic}`), '"code":200', 3000);
-        if (ret != null) {
-            smartiot_connected = true
-            if (ret.includes('"data":1')) {
-                smartiot_switchStatus = true
+        for(let i = 0; i < 3; i++) {
+            let ret = sendRequest(concatReqMsg(`/api/iot/iotTopic/getTopicStatus/${userToken}/${topic}`), '"code":200', 2000);
+            if (ret != null) {
+                smartiot_connected = true
+                if (ret.includes('"data":1')) {
+                    smartiot_switchStatus = true
+                    return
+                }
             }
+            smartiot_connected = (ret != null)
         }
-        smartiot_connected = (ret != null)
+    
     }
 
     /**
@@ -390,6 +399,9 @@ namespace ESP8266_IoT {
     //% subcategory=SmartIoT weight=45
     //% blockId=uploadSmartIotData block="Upload data %data to SmartIoT"
     export function uploadSmartIotData(): void {
+        if(!connectSmartiot) {
+            return
+        }
         basic.pause(smartiot_lastSendTime + 1000 - input.runningTime())
         sendAT(smartiot_sendMsg)
         smartiot_lastSendTime = input.runningTime();
@@ -420,7 +432,7 @@ namespace ESP8266_IoT {
                     basic.pause(500)
                     return
                 }
-                let ret = sendRequest(concatReqMsg(`/api/iot/iotTopic/getTopicStatus/${smartiot_token}/${smartiot_topic}`), '"code":200');
+                let ret = sendRequest(concatReqMsg(`/api/iot/iotTopic/getTopicStatus/${smartiot_token}/${smartiot_topic}`), '"code":200', 500);
                 if (ret != null) {
                     let newStatus = ret.includes('"data":1')
                     if (smartiot_switchStatus != newStatus) {
@@ -432,7 +444,7 @@ namespace ESP8266_IoT {
                     }
                     smartiot_switchStatus = newStatus
                 }
-                basic.pause(1500)
+                basic.pause(1000)
             })
             smartiot_switchListenFlag = true
         }
