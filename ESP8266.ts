@@ -341,8 +341,8 @@ namespace ESP8266_IoT {
     /*
      * Connect to smartiot
      */
-    //% subcategory=SmartIot weight=50
-    //% blockId=initsmartiot block="Connect SmartIot with userToken: %userToken topic: %topic"
+    //% subcategory=SmartIoT weight=50
+    //% blockId=initsmartiot block="Connect SmartIoT with userToken: %userToken topic: %topic"
     export function connectSmartiot(userToken: string, topic: string): void {
         smartiot_token = userToken
         smartiot_topic = topic
@@ -357,10 +357,10 @@ namespace ESP8266_IoT {
     }
 
     /**
-     * upload data to smartiot
+     * save the data to be sent to SmartIoT
      */
-    //% subcategory=SmartIot weight=48
-    //% blockId=setSmartIotUploadData block="set data to send SmartIot |Data 1 = %n1||Data 2 = %n2|Data 3 = %n3|Data 4 = %n4|Data 5 = %n5|Data 6 = %n6|Data 7 = %n7|Data 8 = %n8"
+    //% subcategory=SmartIoT weight=48
+    //% blockId=setSmartIotUploadData block="set data to send SmartIoT |Data 1 = %n1||Data 2 = %n2|Data 3 = %n3|Data 4 = %n4|Data 5 = %n5|Data 6 = %n6|Data 7 = %n7|Data 8 = %n8"
     export function setSmartIotUploadData(
         n1: number = 0,
         n2: number = 0,
@@ -387,8 +387,8 @@ namespace ESP8266_IoT {
     /**
      * upload data to smartiot
      */
-    //% subcategory=SmartIot weight=45
-    //% blockId=uploadSmartIotData block="Upload data %data to smartiot"
+    //% subcategory=SmartIoT weight=45
+    //% blockId=uploadSmartIotData block="Upload data %data to SmartIoT"
     export function uploadSmartIotData(): void {
         basic.pause(smartiot_lastSendTime + 1000 - input.runningTime())
         sendAT(smartiot_sendMsg)
@@ -399,13 +399,13 @@ namespace ESP8266_IoT {
      * Check if ESP8266 successfully connected to SmartIot
      */
     //% block="SmartIot connection %State"
-    //% subcategory="SmartIot" weight=35
+    //% subcategory=SmartIoT weight=35
     export function smartiotState(state: boolean) {
         return smartiot_connected == state;
     }
 
-    //% block="When switch %vocabulary"
-    //% subcategory="SmartIot" weight=30
+    //% block="When SmartIoT switch %vocabulary"
+    //% subcategory=SmartIoT weight=30
     //% state.fieldEditor="gridpicker" state.fieldOptions.columns=2
     export function iotSwitchEvent(state: SmartIotSwitchState, handler: () => void) {
         if (state == SmartIotSwitchState.on) {
