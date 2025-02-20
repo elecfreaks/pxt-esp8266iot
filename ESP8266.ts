@@ -310,7 +310,7 @@ namespace ESP8266_IoT {
         off = 2
     }
 
-    let smartiot_connected: boolean = true
+    let smartiot_connected: boolean = false
     let smartiot_sendMsg: string = ""
     let smartiot_lastSendTime: number = 0
     let smartiot_switchListenFlag: boolean = false
@@ -346,7 +346,7 @@ namespace ESP8266_IoT {
     export function connectSmartiot(userToken: string, topic: string): void {
         smartiot_token = userToken
         smartiot_topic = topic
-        let ret = sendRequest(concatReqMsg(`/api/iot/iotTopic/getTopicStatus/${userToken}/${topic}`), '"code":200');
+        let ret = sendRequest(concatReqMsg(`/api/iot/iotTopic/getTopicStatus/${userToken}/${topic}`), '"code":200', 3000);
         if (ret != null) {
             smartiot_connected = true
             if (ret.includes('"data":1')) {
