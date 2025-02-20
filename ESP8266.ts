@@ -322,8 +322,6 @@ namespace ESP8266_IoT {
     let smartiot_sendMsg: string = ""
     let smartiot_lastSendTime: number = 0
     let smartiot_switchListenFlag: boolean = false
-    let smartiot_switchOnHandler: () => void = null
-    let smartiot_switchOffHandler: () => void = null
     let smartiot_switchStatus: boolean = false
     let smartiot_host: string = "https://www.smartiot.space"
     let smartiot_port: string = "443"
@@ -424,28 +422,25 @@ namespace ESP8266_IoT {
     //% state.fieldEditor="gridpicker" state.fieldOptions.columns=2
     export function iotSwitchEvent(state: SmartIotSwitchState, handler: () => void) {
         if (state == SmartIotSwitchState.on) {
-            smartiot_switchOnHandler = handler
+            registerMsgHandler('{"code":200,"msg":null,"data":1}', () => {
+                if(!smartiot_switchStatus){
+                    handler();
+                }
+                smartiot_switchStatus = true;
+            })
         } else {
-            smartiot_switchOffHandler = handler
+             registerMsgHandler('{"code":200,"msg":null,"data":0}', () => {
+                if(smartiot_switchStatus){
+                    handler();
+                }
+                smartiot_switchStatus = false;
+            })
         }
 
         if (!smartiot_switchListenFlag) {
             basic.forever(() => {
-                if (!smartiot_connected) {
-                    basic.pause(500)
-                    return
-                }
-                let ret = sendRequest(concatReqMsg(`/api/iot/iotTopic/getTopicStatus/${smartiot_token}/${smartiot_topic}`), '"code":200', 500);
-                if (ret != null) {
-                    let newStatus = ret.includes('"data":1')
-                    if (smartiot_switchStatus != newStatus) {
-                        if (newStatus) {
-                            smartiot_switchOnHandler && smartiot_switchOnHandler()
-                        } else {
-                            smartiot_switchOffHandler && smartiot_switchOffHandler()
-                        }
-                    }
-                    smartiot_switchStatus = newStatus
+                if (smartiot_connected) {
+                    sendAT(concatReqMsg(`/api/iot/iotTopic/getTopicStatus/${smartiot_token}/${smartiot_topic}`));
                 }
                 basic.pause(1000)
             })
