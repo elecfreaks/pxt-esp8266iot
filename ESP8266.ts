@@ -107,7 +107,10 @@ namespace ESP8266_IoT {
                 basic.pause(5);
             }
             if(wifi_connected == false && --retryCount > 0) {
-                initWIFI();
+                sendRequest("AT+RST", "ready") // rest
+                sendRequest("AT+CWMODE=1", "OK") // set to STA mode
+                sendRequest("AT+SYSTIMESTAMP=1634953609130", "OK") // Set local timestamp.
+                sendRequest(`AT+CIPSNTPCFG=1,8,"ntp1.aliyun.com","0.pool.ntp.org","time.google.com"`, "AT+CIPSNTPCFG");
             }else {
                 break;
             }
