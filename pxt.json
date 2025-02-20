@@ -1,6 +1,6 @@
 {
     "name": "ESP8266_IoT",
-    "version": "2.1.12",
+    "version": "2.2.0",
     "description": "ESP8266 IoT package by ELECFREAKS, CLASSROOM and Tinkercademy.",
     "license": "MIT",
     "dependencies": {
