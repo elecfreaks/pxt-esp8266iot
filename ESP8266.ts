@@ -423,14 +423,14 @@ namespace ESP8266_IoT {
     export function iotSwitchEvent(state: SmartIotSwitchState, handler: () => void) {
         if (state == SmartIotSwitchState.on) {
             registerMsgHandler('{"code":200,"msg":null,"data":1}', () => {
-                if(!smartiot_switchStatus){
+                if(smartiot_connected && !smartiot_switchStatus){
                     handler();
                 }
                 smartiot_switchStatus = true;
             })
         } else {
              registerMsgHandler('{"code":200,"msg":null,"data":0}', () => {
-                if(smartiot_switchStatus){
+                if(smartiot_connected && smartiot_switchStatus){
                     handler();
                 }
                 smartiot_switchStatus = false;
