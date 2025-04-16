@@ -13,20 +13,27 @@ namespace ESP8266_IoT {
     /*
     * on serial received data
     */
+    let strBuf = ""
     function serialDataHandler() {
-        const res = serial.readLine();
-        Object.keys(msgHandlerMap).forEach(key => {
-            if (res.includes(key)) {
-                if (!res.includes(key)) {
-                    return;
+        const str = strBuf + serial.readString();
+        let splits = str.split("\n")
+        if (str.charCodeAt(str.length - 1) != 10){
+            strBuf = splits.pop()
+        }else {
+            strBuf = ""
+        }
+        for(let i = 0; i < splits.length; i++){
+            let res = splits[i]
+            Object.keys(msgHandlerMap).forEach(key => {
+                if (res.includes(key)) {
+                    if (msgHandlerMap[key].type == 0) {
+                        msgHandlerMap[key].handler(res)
+                    } else {
+                        msgHandlerMap[key].msg = res;
+                    }
                 }
-                if (msgHandlerMap[key].type == 0) {
-                    msgHandlerMap[key].handler(res)
-                } else {
-                    msgHandlerMap[key].msg = res;
-                }
-            }
-        })
+            })
+        }
     }
 
     // write AT command with CR+LF ending
@@ -70,6 +77,14 @@ namespace ESP8266_IoT {
         return waitForResponse(key, wait)
     }
 
+    export function resetEsp8266(){
+        sendRequest("AT+RESTORE", "ready") // restore to factory settings
+        sendRequest("AT+RST", "ready") // rest
+        sendRequest("AT+CWMODE=1", "OK") // set to STA mode
+        sendRequest("AT+SYSTIMESTAMP=1634953609130", "OK") // Set local timestamp.
+        sendRequest(`AT+CIPSNTPCFG=1,8,"ntp1.aliyun.com","0.pool.ntp.org","time.google.com"`, "AT+CIPSNTPCFG", 3000)
+    }
+
     /**
      * Initialize ESP8266 module
      */
@@ -83,11 +98,7 @@ namespace ESP8266_IoT {
         serial.setTxBufferSize(128)
         serial.setRxBufferSize(128)
         serial.onDataReceived(serial.delimiters(Delimiters.NewLine), serialDataHandler)
-        sendRequest("AT+RESTORE", "ready") // restore to factory settings
-        sendRequest("AT+RST", "ready") // rest
-        sendRequest("AT+CWMODE=1", "OK") // set to STA mode
-        sendRequest("AT+SYSTIMESTAMP=1634953609130", "OK") // Set local timestamp.
-        sendRequest(`AT+CIPSNTPCFG=1,8,"ntp1.aliyun.com","0.pool.ntp.org","time.google.com"`, "AT+CIPSNTPCFG");
+        resetEsp8266()
     }
 
     /**
@@ -102,17 +113,11 @@ namespace ESP8266_IoT {
         let retryCount = 3;
         while (true){
             sendAT(`AT+CWJAP="${ssid}","${pw}"`) // connect to Wifi router
-            let timeout = input.runningTime() + 3500;
-            while (!wifi_connected && timeout > input.runningTime()) {
-                basic.pause(5);
-            }
+            pauseUntil(() => wifi_connected, 3500)
             if(wifi_connected == false && --retryCount > 0) {
-                sendRequest("AT+RST", "ready") // rest
-                sendRequest("AT+CWMODE=1", "OK") // set to STA mode
-                sendRequest("AT+SYSTIMESTAMP=1634953609130", "OK") // Set local timestamp.
-                sendRequest(`AT+CIPSNTPCFG=1,8,"ntp1.aliyun.com","0.pool.ntp.org","time.google.com"`, "AT+CIPSNTPCFG");
+                resetEsp8266()
             }else {
-                break;
+                break
             }
         };
     }
@@ -177,13 +182,10 @@ namespace ESP8266_IoT {
             const message = recvStringSplit[3].slice(0, -1)
             mqtt_subHandlers[topic] && mqtt_subHandlers[topic](message)
         })
-        let retryCount = 3;
+        let retryCount = 3
         do {
             sendAT(`AT+MQTTCONN=0,"${host}",${port},${reconnect ? 0 : 1}`)
-            let timeout = input.runningTime() + 3500;
-            while (!mqtt_connected && timeout > input.runningTime()) {
-                basic.pause(5);
-            }
+            pauseUntil(() => mqtt_connected, 3500)
         } while (mqtt_connected == false && --retryCount > 0);
         Object.keys(mqtt_subQos).forEach(topic => {
             const qos = mqtt_subQos[topic]
@@ -323,8 +325,8 @@ namespace ESP8266_IoT {
     let smartiot_lastSendTime: number = 0
     let smartiot_switchListenFlag: boolean = false
     let smartiot_switchStatus: boolean = false
-    let smartiot_host: string = "https://www.smartiot.space"
-    let smartiot_port: string = "443"
+    let smartiot_host: string = "http://www.smartiot.space"
+    let smartiot_port: string = "8080"
     let smartiot_token: string = ""
     let smartiot_topic: string = ""
 
@@ -353,7 +355,7 @@ namespace ESP8266_IoT {
         smartiot_token = userToken
         smartiot_topic = topic
         for(let i = 0; i < 3; i++) {
-            let ret = sendRequest(concatReqMsg(`/api/iot/iotTopic/getTopicStatus/${userToken}/${topic}`), '"code":200', 2000);
+            let ret = sendRequest(concatReqMsg(`/iot/iotTopic/getTopicStatus/${userToken}/${topic}`), '"code":200', 2000);
             if (ret != null) {
                 smartiot_connected = true
                 if (ret.includes('"data":1')) {
@@ -382,7 +384,7 @@ namespace ESP8266_IoT {
         n8: number = 0
     ): void {
         smartiot_sendMsg = concatReqMsg(
-            `/api/iot/iotTopicData/addTopicData?userToken=${smartiot_token}&topicName=${smartiot_topic}`
+            `/iot/iotTopicData/addTopicData?userToken=${smartiot_token}&topicName=${smartiot_topic}`
             + "&data1=" + n1
             + "&data2=" + n2
             + "&data3=" + n3
@@ -440,7 +442,7 @@ namespace ESP8266_IoT {
         if (!smartiot_switchListenFlag) {
             basic.forever(() => {
                 if (smartiot_connected) {
-                    sendAT(concatReqMsg(`/api/iot/iotTopic/getTopicStatus/${smartiot_token}/${smartiot_topic}`));
+                    sendAT(concatReqMsg(`/iot/iotTopic/getTopicStatus/${smartiot_token}/${smartiot_topic}`));
                 }
                 basic.pause(1000)
             })
