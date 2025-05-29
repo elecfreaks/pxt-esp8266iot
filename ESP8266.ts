@@ -17,12 +17,12 @@ namespace ESP8266_IoT {
     function serialDataHandler() {
         const str = strBuf + serial.readString();
         let splits = str.split("\n")
-        if (str.charCodeAt(str.length - 1) != 10){
+        if (str.charCodeAt(str.length - 1) != 10) {
             strBuf = splits.pop()
-        }else {
+        } else {
             strBuf = ""
         }
-        for(let i = 0; i < splits.length; i++){
+        for (let i = 0; i < splits.length; i++) {
             let res = splits[i]
             Object.keys(msgHandlerMap).forEach(key => {
                 if (res.includes(key)) {
@@ -77,11 +77,14 @@ namespace ESP8266_IoT {
         return waitForResponse(key, wait)
     }
 
-    export function resetEsp8266(){
-        sendRequest("AT+RESTORE", "ready") // restore to factory settings
-        sendRequest("AT+RST", "ready") // rest
-        sendRequest("AT+CWMODE=1", "OK") // set to STA mode
-        sendRequest("AT+SYSTIMESTAMP=1634953609130", "OK") // Set local timestamp.
+    export function resetEsp8266() {
+        sendRequest("AT+RESTORE", "ready", 2000) // restore to factory settings
+        sendRequest("AT+RST", "ready", 2000) // rest
+        // set to STA mode
+        if (sendRequest("AT+CWMODE=1", "OK") == null) {
+            sendRequest("AT+CWMODE=1", "OK")
+        }
+        // sendRequest("AT+SYSTIMESTAMP=1634953609130", "OK") // Set local timestamp.
         sendRequest(`AT+CIPSNTPCFG=1,8,"ntp1.aliyun.com","0.pool.ntp.org","time.google.com"`, "AT+CIPSNTPCFG", 3000)
     }
 
@@ -111,12 +114,12 @@ namespace ESP8266_IoT {
         registerMsgHandler("WIFI DISCONNECT", () => wifi_connected = false)
         registerMsgHandler("WIFI GOT IP", () => wifi_connected = true)
         let retryCount = 3;
-        while (true){
+        while (true) {
             sendAT(`AT+CWJAP="${ssid}","${pw}"`) // connect to Wifi router
             pauseUntil(() => wifi_connected, 3500)
-            if(wifi_connected == false && --retryCount > 0) {
+            if (wifi_connected == false && --retryCount > 0) {
                 resetEsp8266()
-            }else {
+            } else {
                 break
             }
         };
@@ -354,7 +357,7 @@ namespace ESP8266_IoT {
     export function connectSmartiot(userToken: string, topic: string): void {
         smartiot_token = userToken
         smartiot_topic = topic
-        for(let i = 0; i < 3; i++) {
+        for (let i = 0; i < 3; i++) {
             let ret = sendRequest(concatReqMsg(`/iot/iotTopic/getTopicStatus/${userToken}/${topic}`), '"code":200', 2000);
             if (ret != null) {
                 smartiot_connected = true
@@ -365,7 +368,7 @@ namespace ESP8266_IoT {
             }
             smartiot_connected = (ret != null)
         }
-    
+
     }
 
     /**
@@ -402,7 +405,7 @@ namespace ESP8266_IoT {
     //% subcategory=SmartIoT weight=45
     //% blockId=uploadSmartIotData block="Upload data %data to SmartIoT"
     export function uploadSmartIotData(): void {
-        if(!connectSmartiot) {
+        if (!connectSmartiot) {
             return
         }
         basic.pause(smartiot_lastSendTime + 1000 - input.runningTime())
@@ -425,14 +428,14 @@ namespace ESP8266_IoT {
     export function iotSwitchEvent(state: SmartIotSwitchState, handler: () => void) {
         if (state == SmartIotSwitchState.on) {
             registerMsgHandler('{"code":200,"msg":null,"data":"switchOn"}', () => {
-                if(smartiot_connected && !smartiot_switchStatus){
+                if (smartiot_connected && !smartiot_switchStatus) {
                     handler();
                 }
                 smartiot_switchStatus = true;
             })
         } else {
             registerMsgHandler('{"code":200,"msg":null,"data":"switchOff"}', () => {
-                if(smartiot_connected && smartiot_switchStatus){
+                if (smartiot_connected && smartiot_switchStatus) {
                     handler();
                 }
                 smartiot_switchStatus = false;
