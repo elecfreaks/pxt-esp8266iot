@@ -11,6 +11,7 @@
         "ESP8266.ts",
         "_locales/zh/ESP8266_IoT-strings.json",
         "_locales/zh-TW/ESP8266_IoT-strings.json",
+        "_locales/pl/ESP8266_IoT-strings.json",
         "_locales/ESP8266_IoT-strings.json"
     ],
     "testFiles": [
