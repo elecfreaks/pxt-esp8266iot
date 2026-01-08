@@ -205,15 +205,20 @@ namespace ESP8266_IoT {
         return mqtt_connected
     }
 
-    /*
-     * send message
+    /**
+     * Publish a message to an MQTT topic
+     * @param msg The message to publish
+     * @param topic The MQTT topic to publish to
+     * @param qos Quality of Service level (0, 1, or 2)
+     * @param retain If true, the broker will store the message and deliver it to new subscribers
      */
     //% subcategory=MQTT weight=21
-    //% blockId=sendMQTT block="publish %msg to Topic:%topic with Qos:%qos"
+    //% blockId=sendMQTT block="publish %msg to Topic:%topic with Qos:%qos retain:%retain"
     //% msg.defl=hello
     //% topic.defl=topic/1
-    export function publishMqttMessage(msg: string, topic: string, qos: QosList): void {
-        sendAT(`AT+MQTTPUB=0,"${topic}","${msg}",${qos},0`, 1000)
+    //% retain.defl=true
+    export function publishMqttMessage(msg: string, topic: string, qos: QosList, retain: boolean = true): void {
+        sendAT(`AT+MQTTPUB=0,"${topic}","${msg}",${qos},${retain ? 1 : 0}`, 1000)
     }
 
     /*
