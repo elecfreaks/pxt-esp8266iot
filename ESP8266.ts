@@ -205,8 +205,12 @@ namespace ESP8266_IoT {
         return mqtt_connected
     }
 
-    /*
-     * send message
+    /**
+     * Publish a message to an MQTT topic
+     * @param msg The message to publish
+     * @param topic The MQTT topic to publish to
+     * @param qos Quality of Service level (0, 1, or 2)
+     * @param retain If true, the broker will store the message and deliver it to new subscribers
      */
     //% subcategory=MQTT weight=21
     //% blockId=sendMQTT block="publish %msg to Topic:%topic with Qos:%qos retain:%retain"
