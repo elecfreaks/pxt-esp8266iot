@@ -11,7 +11,7 @@
   "ESP8266_IoT.iotSwitchEvent|block": "When switch %vocabulary",
   "ESP8266_IoT.smartiotState|block": "SmartIot connection %State",
   "ESP8266_IoT.postIFTTT|block": "post IFTTT with|value1:%value value2:%value2 value3:%value3",
-  "ESP8266_IoT.publishMqttMessage|block": "publish %msg to Topic:%topic with Qos:%qos",
+  "ESP8266_IoT.publishMqttMessage|block": "publish %msg to Topic:%topic with Qos:%qos retain:%retain",
   "ESP8266_IoT.setData|block": "set data to send ThingSpeak | Write API key = %write_api_key|Field 1 = %n1||Field 2 = %n2|Field 3 = %n3|Field 4 = %n4|Field 5 = %n5|Field 6 = %n6|Field 7 = %n7|Field 8 = %n8",
   "ESP8266_IoT.setIFTTT|block": "set IFTTT key:%key event:%event",
   "ESP8266_IoT.setMQTT|block": "Set MQTT client config|scheme: %scheme clientID: %clientID username: %username password: %password path: %path",

@@ -209,11 +209,12 @@ namespace ESP8266_IoT {
      * send message
      */
     //% subcategory=MQTT weight=21
-    //% blockId=sendMQTT block="publish %msg to Topic:%topic with Qos:%qos"
+    //% blockId=sendMQTT block="publish %msg to Topic:%topic with Qos:%qos retain:%retain"
     //% msg.defl=hello
     //% topic.defl=topic/1
-    export function publishMqttMessage(msg: string, topic: string, qos: QosList): void {
-        sendAT(`AT+MQTTPUB=0,"${topic}","${msg}",${qos},0`, 1000)
+    //% retain.defl=false
+    export function publishMqttMessage(msg: string, topic: string, qos: QosList, retain: boolean = true): void {
+        sendAT(`AT+MQTTPUB=0,"${topic}","${msg}",${qos},${retain ? 1 : 0}`, 1000)
     }
 
     /*
