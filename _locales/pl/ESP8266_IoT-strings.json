@@ -9,7 +9,7 @@
     "ESP8266_IoT.breakMQTT|block": "rozłącz z brokerem MQTT",
     "ESP8266_IoT.isMqttBrokerConnected|block": "połączono z brokerem MQTT",
     "ESP8266_IoT.connectMQTT|block": "połącz się z brokerem MQTT |Adres host: %host |Port: %port |ponawiaj: $reconnect",
-    "ESP8266_IoT.publishMqttMessage|block": "wyślij %msg na kanał: %topic Qos: %qos",
+    "ESP8266_IoT.publishMqttMessage|block": "wyślij %msg na kanał: %topic Qos: %qos retain: %retain",
     "ESP8266_IoT.setMQTT|block": "ustaw konfigurację klienta MQTT |Protokół: %scheme |ID klienta: %clientID |Nazwa użytkownika: %username |Hasło: %password |Ścieżka: %path",
     "{id:subcategory}ThingSpeak": "ThingSpeak",
     "ESP8266_IoT.connectThingSpeak|block": "połącz się z platformą ThingSpeak",

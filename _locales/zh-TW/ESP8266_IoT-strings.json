@@ -9,7 +9,7 @@
     "ESP8266_IoT.breakMQTT|block": "斷開與 broker 的連接",
     "ESP8266_IoT.isMqttBrokerConnected|block": "MQTT broker 已連接",
     "ESP8266_IoT.connectMQTT|block": "連接 MQTT broker host(域名): %host port(端口): %port reconnect(重連): $reconnect",
-    "ESP8266_IoT.publishMqttMessage|block": "發送 %msg 到 Topic:%topic Qos:%qos",
+    "ESP8266_IoT.publishMqttMessage|block": "發送 %msg 到 Topic:%topic Qos:%qos retain:%retain",
     "ESP8266_IoT.setMQTT|block": "設置 MQTT 客戶端配置|scheme(協議): %scheme clientID(客戶端 ID): %clientID username(用戶名): %username password(密碼): %password path(路徑): %path",
     "{id:subcategory}ThingSpeak": "ThingSpeak",
     "ESP8266_IoT.connectThingSpeak|block": "連接 Thingspeak 平臺",
